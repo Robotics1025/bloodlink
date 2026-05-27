@@ -3,7 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum BloodGroup {
@@ -99,7 +100,6 @@ model Hospital {
   updatedAt     DateTime       @updatedAt
 
   bloodRequests BloodRequest[]
-  inventory     Inventory[]
   notifications Notification[]
 
   @@map("hospitals")
@@ -143,16 +143,10 @@ model BloodRequest {
 
 model Inventory {
   id             Int        @id @default(autoincrement())
-  hospitalId     Int
-  bloodGroup     BloodGroup
+  bloodGroup     BloodGroup @unique
   availableUnits Int        @default(0)
-  expiryDate     DateTime?
   lastUpdated    DateTime   @default(now()) @updatedAt
 
-  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-
-  @@unique([hospitalId, bloodGroup])
-  @@index([hospitalId])
   @@map("inventory")
 }
 
