@@ -37,7 +37,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState<Role>("donor")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,11 +46,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     setError(null)
     setLoading(true)
     try {
-      const result = await signIn("credentials", { email, password, role, redirect: false })
+      const result = await signIn("credentials", { email, password, redirect: false })
       if (result?.error) {
-        setError("Invalid email, password, or role. Please try again.")
+        setError("Invalid email or password. Please try again.")
       } else {
-        router.push(ROLE_REDIRECT[role])
+        const sessionRes = await fetch("/api/auth/session")
+        const session = await sessionRes.json()
+        const userRole = session?.user?.role
+        
+        if (userRole === "admin") router.push("/admin/dashboard")
+        else if (userRole === "hospital") router.push("/hospital/dashboard")
+        else router.push("/donor/dashboard")
+        
         router.refresh()
       }
     } catch {
@@ -88,20 +94,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 </div>
               )}
 
-              {/* Role */}
-              <Field>
-                <FieldLabel>Sign in as</FieldLabel>
-                <Select value={role} onValueChange={(v) => setRole((v ?? "donor") as Role)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="donor">Donor</SelectItem>
-                    <SelectItem value="hospital">Hospital</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
+
 
               {/* Email */}
               <Field>

@@ -7,7 +7,6 @@ import { z } from "zod";
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(["donor", "hospital", "admin"]),
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -16,32 +15,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        role: { label: "Role", type: "text" },
       },
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const { email, password, role } = parsed.data;
+        const { email, password } = parsed.data;
 
-        if (role === "donor") {
-          const donor = await prisma.donor.findUnique({ where: { email } });
-          if (!donor) return null;
-          const valid = await bcrypt.compare(password, donor.passwordHash);
-          if (!valid) return null;
+        // Try Admin
+        const admin = await prisma.admin.findUnique({ where: { email } });
+        if (admin && await bcrypt.compare(password, admin.passwordHash)) {
           return {
-            id: String(donor.id),
-            name: donor.fullName,
-            email: donor.email,
-            role: "donor",
+            id: String(admin.id),
+            name: admin.fullName,
+            email: admin.email,
+            role: "admin",
           };
         }
 
-        if (role === "hospital") {
-          const hospital = await prisma.hospital.findUnique({ where: { email } });
-          if (!hospital) return null;
-          const valid = await bcrypt.compare(password, hospital.passwordHash);
-          if (!valid) return null;
+        // Try Hospital
+        const hospital = await prisma.hospital.findUnique({ where: { email } });
+        if (hospital && await bcrypt.compare(password, hospital.passwordHash)) {
           return {
             id: String(hospital.id),
             name: hospital.hospitalName,
@@ -50,16 +44,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
         }
 
-        if (role === "admin") {
-          const admin = await prisma.admin.findUnique({ where: { email } });
-          if (!admin) return null;
-          const valid = await bcrypt.compare(password, admin.passwordHash);
-          if (!valid) return null;
+        // Try Donor
+        const donor = await prisma.donor.findUnique({ where: { email } });
+        if (donor && await bcrypt.compare(password, donor.passwordHash)) {
           return {
-            id: String(admin.id),
-            name: admin.fullName,
-            email: admin.email,
-            role: "admin",
+            id: String(donor.id),
+            name: donor.fullName,
+            email: donor.email,
+            role: "donor",
           };
         }
 
