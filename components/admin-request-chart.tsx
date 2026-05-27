@@ -61,7 +61,7 @@ export function AdminRequestChart() {
           <CardTitle>Blood Request Trends</CardTitle>
           <CardDescription>Monthly requests vs fulfilled across all hospitals</CardDescription>
         </div>
-        <Select value={range} onValueChange={setRange}>
+        <Select value={range} onValueChange={(v) => v && setRange(v)}>
           <SelectTrigger className="w-[140px] rounded-lg sm:ml-auto">
             <SelectValue />
           </SelectTrigger>
