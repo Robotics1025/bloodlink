@@ -100,6 +100,7 @@ model Hospital {
 
   bloodRequests BloodRequest[]
   notifications Notification[]
+  inventory     Inventory[]
 
   @@map("hospitals")
 }
@@ -142,10 +143,14 @@ model BloodRequest {
 
 model Inventory {
   id             Int        @id @default(autoincrement())
-  bloodGroup     BloodGroup @unique
+  hospitalId     Int?
+  bloodGroup     BloodGroup
   availableUnits Int        @default(0)
   lastUpdated    DateTime   @default(now()) @updatedAt
 
+  hospital Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([hospitalId, bloodGroup])
   @@map("inventory")
 }
 

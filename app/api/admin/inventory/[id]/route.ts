@@ -16,10 +16,9 @@ export async function PATCH(
   const existing = await prisma.inventory.findUnique({ where: { id: Number(id) } })
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
   const result = await upsertInventory({
-    hospitalId: existing.hospitalId,
+    hospitalId: existing.hospitalId ?? undefined,
     bloodGroup: existing.bloodGroup,
     availableUnits: data.availableUnits ?? existing.availableUnits,
-    expiryDate: data.expiryDate,
   })
   if ("error" in result) return NextResponse.json({ error: result.error }, { status: 400 })
   return NextResponse.json(result)
