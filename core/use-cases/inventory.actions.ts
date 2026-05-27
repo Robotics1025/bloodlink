@@ -12,16 +12,24 @@ export async function upsertInventory(data: unknown) {
   const parsed = inventorySchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
   const { hospitalId, bloodGroup, availableUnits } = parsed.data
-  await prisma.inventory.upsert({
-    where: { 
-      hospitalId_bloodGroup: {
-        hospitalId: hospitalId ?? null,
-        bloodGroup
-      }
+
+  const existing = await prisma.inventory.findFirst({
+    where: {
+      hospitalId: hospitalId ?? null,
+      bloodGroup,
     },
-    update: { availableUnits },
-    create: { hospitalId, bloodGroup, availableUnits },
   })
+
+  if (existing) {
+    await prisma.inventory.update({
+      where: { id: existing.id },
+      data: { availableUnits },
+    })
+  } else {
+    await prisma.inventory.create({
+      data: { hospitalId, bloodGroup, availableUnits },
+    })
+  }
   return { success: true }
 }
 

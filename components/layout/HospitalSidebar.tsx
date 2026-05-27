@@ -48,14 +48,16 @@ export function HospitalSidebar() {
       <div className={cn("px-3 py-3 border-b border-slate-800", sidebarCollapsed && "px-2")}>
         {sidebarCollapsed ? (
           <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setPostRequestOpen(true)}
-                className="w-full flex items-center justify-center h-9 rounded-lg bg-red-600 hover:bg-red-700 transition-colors"
-              >
-                <PlusCircle className="w-4 h-4 text-white" />
-              </button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <button
+                  onClick={() => setPostRequestOpen(true)}
+                  className="w-full flex items-center justify-center h-9 rounded-lg bg-red-600 hover:bg-red-700 transition-colors"
+                >
+                  <PlusCircle className="w-4 h-4 text-white" />
+                </button>
+              }
+            />
             <TooltipContent side="right">Post Blood Request</TooltipContent>
           </Tooltip>
         ) : (
@@ -88,7 +90,7 @@ export function HospitalSidebar() {
           if (sidebarCollapsed) {
             return (
               <Tooltip key={href}>
-                <TooltipTrigger asChild>{item}</TooltipTrigger>
+                <TooltipTrigger render={item} />
                 <TooltipContent side="right">{label}</TooltipContent>
               </Tooltip>
             );
@@ -101,13 +103,15 @@ export function HospitalSidebar() {
       <div className={cn("py-3 border-t border-slate-700", sidebarCollapsed ? "px-2" : "px-2")}>
         {sidebarCollapsed ? (
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon"
-                className="w-full text-slate-300 hover:text-white hover:bg-slate-800"
-                onClick={() => signOut({ callbackUrl: "/" })}>
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button variant="ghost" size="icon"
+                  className="w-full text-slate-300 hover:text-white hover:bg-slate-800"
+                  onClick={() => signOut({ callbackUrl: "/" })}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              }
+            />
             <TooltipContent side="right">Logout</TooltipContent>
           </Tooltip>
         ) : (

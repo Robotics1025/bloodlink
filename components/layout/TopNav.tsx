@@ -73,18 +73,22 @@ export function TopNav() {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link href="/hospital/profile" className="flex items-center gap-2 cursor-pointer">
-                    <User className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-xs">Hospital Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/hospital/inventory" className="flex items-center gap-2 cursor-pointer">
-                    <Settings className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-xs">Manage Inventory</span>
-                  </Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem
+                  render={
+                    <Link href="/hospital/profile" className="flex items-center gap-2 cursor-pointer">
+                      <User className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs">Hospital Profile</span>
+                    </Link>
+                  }
+                />
+                <DropdownMenuItem
+                  render={
+                    <Link href="/hospital/inventory" className="flex items-center gap-2 cursor-pointer">
+                      <Settings className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs">Manage Inventory</span>
+                    </Link>
+                  }
+                />
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>

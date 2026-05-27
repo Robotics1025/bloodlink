@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 import bcrypt from "bcryptjs";
 
-const adapter = new PrismaMariaDb(
-  process.env.DATABASE_URL ?? "mysql://root:password@localhost:3306/blood_link_db"
-);
+const connectionString = process.env.DATABASE_URL;
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -50,18 +51,29 @@ async function main() {
   const inventoryUnits = [12, 3, 18, 5, 8, 2, 25, 14];
 
   for (let i = 0; i < bloodGroups.length; i++) {
-    await prisma.inventory.upsert({
-      where: { hospitalId_bloodGroup: { hospitalId: hospital.id, bloodGroup: bloodGroups[i] } },
-      update: {},
-      create: {
-        hospitalId: hospital.id,
+    const existing = await prisma.inventory.findFirst({
+      where: {
+        hospitalId: null,
         bloodGroup: bloodGroups[i],
-        availableUnits: inventoryUnits[i],
-        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     });
+
+    if (existing) {
+      await prisma.inventory.update({
+        where: { id: existing.id },
+        data: { availableUnits: inventoryUnits[i] },
+      });
+    } else {
+      await prisma.inventory.create({
+        data: {
+          bloodGroup: bloodGroups[i],
+          availableUnits: inventoryUnits[i],
+          hospitalId: null,
+        },
+      });
+    }
   }
-  console.log("✓ Inventory seeded for hospital");
+  console.log("✓ Central Inventory seeded");
 
   // Seed Donors
   const donorHash = await bcrypt.hash("donor123", 12);

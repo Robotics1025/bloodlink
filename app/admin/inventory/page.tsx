@@ -6,12 +6,11 @@ import { useEffect, useState, useCallback, useMemo } from "react"
 import {
   Search, Pencil, Loader2, AlertTriangle, Package,
   Plus, Filter, RefreshCw, ChevronLeft, ChevronRight,
-  Building2, Droplet, TrendingDown, CheckCircle2,
+  Droplet, TrendingDown, CheckCircle2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -48,23 +47,18 @@ function stockInfo(units: number) {
 
 function fmtDate(d: string | null) {
   if (!d) return "—"
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
 }
 
 interface InventoryItem {
   id: number
-  hospitalId: number
   bloodGroup: BloodGroup
   availableUnits: number
-  expiryDate: string | null
   lastUpdated: string
-  hospital: { hospitalName: string }
 }
-interface Hospital { id: number; hospitalName: string }
 
 export default function ManageInventoryPage() {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
-  const [hospitals, setHospitals] = useState<Hospital[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [bloodFilter, setBloodFilter] = useState("ALL")
@@ -76,20 +70,16 @@ export default function ManageInventoryPage() {
   const [error, setError] = useState("")
   // Edit form
   const [editUnits, setEditUnits] = useState("")
-  const [editExpiry, setEditExpiry] = useState("")
   // Add form
-  const [addHospitalId, setAddHospitalId] = useState("")
   const [addBloodGroup, setAddBloodGroup] = useState<BloodGroup | "">("")
   const [addUnits, setAddUnits] = useState("")
-  const [addExpiry, setAddExpiry] = useState("")
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [invRes, hospRes] = await Promise.all([fetch("/api/admin/inventory"), fetch("/api/admin/hospitals")])
-      const [invData, hospData] = await Promise.all([invRes.json(), hospRes.json()])
+      const res = await fetch("/api/admin/inventory")
+      const invData = await res.json()
       setInventory(invData)
-      setHospitals(hospData.filter((h: { status: string }) => h.status === "APPROVED"))
     } finally { setLoading(false) }
   }, [])
 
@@ -98,7 +88,7 @@ export default function ManageInventoryPage() {
 
   const filtered = useMemo(() => inventory.filter((item) => {
     const q = search.toLowerCase()
-    const matchSearch = !q || item.hospital.hospitalName.toLowerCase().includes(q) || (BG_LABEL[item.bloodGroup] ?? "").toLowerCase().includes(q)
+    const matchSearch = !q || (BG_LABEL[item.bloodGroup] ?? "").toLowerCase().includes(q)
     const matchBlood = bloodFilter === "ALL" || item.bloodGroup === bloodFilter
     const matchStock = stockFilter === "ALL" ||
       (stockFilter === "OUT"  && item.availableUnits === 0) ||
@@ -114,36 +104,38 @@ export default function ManageInventoryPage() {
   const openEdit = (item: InventoryItem) => {
     setEditItem(item)
     setEditUnits(String(item.availableUnits))
-    setEditExpiry(item.expiryDate ? item.expiryDate.split("T")[0] : "")
     setError("")
   }
+  
   const handleUpdate = async () => {
     if (!editItem) return
     setSaving(true); setError("")
     try {
-      const res = await fetch(`/api/admin/inventory/${editItem.id}`, {
-        method: "PATCH",
+      // Actually we upsert since it's central inventory based on bloodGroup
+      const res = await fetch(`/api/admin/inventory`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ availableUnits: Number(editUnits), expiryDate: editExpiry || undefined }),
+        body: JSON.stringify({ bloodGroup: editItem.bloodGroup, availableUnits: Number(editUnits) }),
       })
       const data = await res.json()
       if (data.error) { setError(data.error); return }
       await fetchData(); setEditItem(null)
     } finally { setSaving(false) }
   }
+  
   const handleAdd = async () => {
-    if (!addHospitalId || !addBloodGroup || !addUnits) { setError("Hospital, blood group and units are required."); return }
+    if (!addBloodGroup || !addUnits) { setError("Blood group and units are required."); return }
     setSaving(true); setError("")
     try {
       const res = await fetch("/api/admin/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hospitalId: Number(addHospitalId), bloodGroup: addBloodGroup, availableUnits: Number(addUnits), expiryDate: addExpiry || undefined }),
+        body: JSON.stringify({ bloodGroup: addBloodGroup, availableUnits: Number(addUnits) }),
       })
       const data = await res.json()
       if (data.error) { setError(data.error); return }
       await fetchData()
-      setAddOpen(false); setAddHospitalId(""); setAddBloodGroup(""); setAddUnits(""); setAddExpiry("")
+      setAddOpen(false); setAddBloodGroup(""); setAddUnits("")
     } finally { setSaving(false) }
   }
 
@@ -154,11 +146,10 @@ export default function ManageInventoryPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
-      {/* Heading */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Blood Inventory</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage blood stock levels across all hospitals</p>
+          <h1 className="text-2xl font-bold tracking-tight">Central Blood Inventory</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage blood stock levels for the central blood bank</p>
         </div>
         <div className="flex gap-2 self-start sm:self-auto">
           <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
@@ -171,7 +162,6 @@ export default function ManageInventoryPage() {
         </div>
       </div>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: "Total Units",  value: totalUnits,    Icon: Droplet,       color: "text-blue-600",   bg: "bg-blue-50" },
@@ -193,13 +183,12 @@ export default function ManageInventoryPage() {
         ))}
       </div>
 
-      {/* Table */}
       <Card className="shadow-xs">
         <CardHeader className="pb-4 border-b">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input placeholder="Search hospital or blood group…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
+              <Input placeholder="Search blood group…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -234,24 +223,22 @@ export default function ManageInventoryPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="pl-6 text-xs">Hospital</TableHead>
-                  <TableHead className="text-xs">Blood</TableHead>
+                  <TableHead className="pl-6 text-xs w-[120px]">Blood</TableHead>
                   <TableHead className="text-xs w-[180px]">Stock Level</TableHead>
                   <TableHead className="text-xs">Units</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell">Expiry</TableHead>
-                  <TableHead className="text-xs hidden lg:table-cell">Updated</TableHead>
+                  <TableHead className="text-xs hidden lg:table-cell">Last Updated</TableHead>
                   <TableHead className="text-xs pr-6 text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={8} className="py-16 text-center">
+                  <TableRow><TableCell colSpan={6} className="py-16 text-center">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                     <p className="text-sm text-muted-foreground mt-2">Loading inventory…</p>
                   </TableCell></TableRow>
                 ) : paginated.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="py-16 text-center">
+                  <TableRow><TableCell colSpan={6} className="py-16 text-center">
                     <Package className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
                     <p className="text-sm font-medium text-muted-foreground">No inventory records</p>
                     <p className="text-xs text-muted-foreground/70 mt-1">Try adjusting filters or add new stock</p>
@@ -261,12 +248,6 @@ export default function ManageInventoryPage() {
                   return (
                     <TableRow key={item.id} className={item.availableUnits === 0 ? "bg-red-50/30" : item.availableUnits <= 5 ? "bg-orange-50/20" : ""}>
                       <TableCell className="pl-6">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-sm font-medium">{item.hospital.hospitalName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${BG_COLORS[item.bloodGroup] ?? "bg-gray-100 text-gray-700"}`}>
                           {BG_LABEL[item.bloodGroup] ?? item.bloodGroup}
                         </span>
@@ -289,9 +270,8 @@ export default function ManageInventoryPage() {
                       <TableCell>
                         <Badge variant="outline" className={`text-xs ${st.cls}`}>{st.label}</Badge>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{fmtDate(item.expiryDate)}</TableCell>
                       <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">{fmtDate(item.lastUpdated)}</TableCell>
-                      <TableCell className="pr-6">
+                      <TableCell className="pr-6 text-right">
                         <Button variant="outline" size="sm" onClick={() => openEdit(item)}
                           className="h-8 text-xs gap-1.5 hover:bg-muted">
                           <Pencil className="h-3 w-3" />Update
@@ -303,35 +283,6 @@ export default function ManageInventoryPage() {
               </TableBody>
             </Table>
           </div>
-
-          {/* Pagination */}
-          {!loading && filtered.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/20">
-              <p className="text-xs text-muted-foreground">
-                Showing <span className="font-medium">{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-medium">{filtered.length}</span> entries
-              </p>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                  .reduce<(number|"…")[]>((acc, p, idx, arr) => {
-                    if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("…")
-                    acc.push(p); return acc
-                  }, [])
-                  .map((p, idx) => p === "…"
-                    ? <span key={`e${idx}`} className="px-1 text-muted-foreground text-sm">…</span>
-                    : <Button key={p} variant={page === p ? "default" : "outline"} size="icon"
-                        className={`h-8 w-8 text-xs ${page === p ? "bg-red-600 hover:bg-red-700 text-white border-red-600" : ""}`}
-                        onClick={() => setPage(p as number)}>{p}</Button>
-                  )}
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -340,25 +291,20 @@ export default function ManageInventoryPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Update Stock</DialogTitle>
-            <DialogDescription>Adjust available units and expiry date for this blood group.</DialogDescription>
+            <DialogDescription>Adjust available units for this blood group.</DialogDescription>
           </DialogHeader>
           {editItem && (
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border">
-                <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-sm font-medium flex-1">{editItem.hospital.hospitalName}</span>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${BG_COLORS[editItem.bloodGroup] ?? "bg-gray-100 text-gray-700"}`}>
                   {BG_LABEL[editItem.bloodGroup] ?? editItem.bloodGroup}
                 </span>
+                <span className="text-sm font-medium flex-1">Central Blood Bank</span>
               </div>
               <FieldGroup>
                 <Field>
                   <FieldLabel htmlFor="editUnits">Available Units</FieldLabel>
                   <Input id="editUnits" type="number" min="0" value={editUnits} onChange={(e) => setEditUnits(e.target.value)} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="editExpiry">Expiry Date <span className="text-muted-foreground font-normal">(optional)</span></FieldLabel>
-                  <Input id="editExpiry" type="date" value={editExpiry} onChange={(e) => setEditExpiry(e.target.value)} />
                 </Field>
               </FieldGroup>
               {error && <p className="text-xs text-red-600 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />{error}</p>}
@@ -378,18 +324,9 @@ export default function ManageInventoryPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Add Stock Entry</DialogTitle>
-            <DialogDescription>Add a new blood group stock record for a hospital.</DialogDescription>
+            <DialogDescription>Add a new blood group stock record to the central bank.</DialogDescription>
           </DialogHeader>
           <FieldGroup>
-            <Field>
-              <FieldLabel>Hospital</FieldLabel>
-              <Select value={addHospitalId} onValueChange={(v) => setAddHospitalId(v ?? "")}>
-                <SelectTrigger><SelectValue placeholder="Select hospital" /></SelectTrigger>
-                <SelectContent>
-                  {hospitals.map((h) => <SelectItem key={h.id} value={String(h.id)}>{h.hospitalName}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Field>
             <Field>
               <FieldLabel>Blood Group</FieldLabel>
               <Select value={addBloodGroup} onValueChange={(v) => setAddBloodGroup((v ?? "") as BloodGroup)}>
@@ -399,16 +336,10 @@ export default function ManageInventoryPage() {
                 </SelectContent>
               </Select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field>
-                <FieldLabel htmlFor="addUnits">Units</FieldLabel>
-                <Input id="addUnits" type="number" min="0" placeholder="0" value={addUnits} onChange={(e) => setAddUnits(e.target.value)} />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="addExpiry">Expiry <span className="text-muted-foreground font-normal text-[10px]">(opt.)</span></FieldLabel>
-                <Input id="addExpiry" type="date" value={addExpiry} onChange={(e) => setAddExpiry(e.target.value)} />
-              </Field>
-            </div>
+            <Field>
+              <FieldLabel htmlFor="addUnits">Units</FieldLabel>
+              <Input id="addUnits" type="number" min="0" placeholder="0" value={addUnits} onChange={(e) => setAddUnits(e.target.value)} />
+            </Field>
             {error && <p className="text-xs text-red-600 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />{error}</p>}
           </FieldGroup>
           <DialogFooter className="gap-2">

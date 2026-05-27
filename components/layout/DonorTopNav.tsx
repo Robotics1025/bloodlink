@@ -54,16 +54,20 @@ export function DonorTopNav() {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link href="/donor/profile" className="flex items-center gap-2 cursor-pointer">
-                    <User className="w-3.5 h-3.5 text-slate-400" /><span className="text-xs">My Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/donor/drives" className="flex items-center gap-2 cursor-pointer">
-                    <HeartPulse className="w-3.5 h-3.5 text-slate-400" /><span className="text-xs">Blood Drives</span>
-                  </Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem
+                  render={
+                    <Link href="/donor/profile" className="flex items-center gap-2 cursor-pointer">
+                      <User className="w-3.5 h-3.5 text-slate-400" /><span className="text-xs">My Profile</span>
+                    </Link>
+                  }
+                />
+                <DropdownMenuItem
+                  render={
+                    <Link href="/donor/drives" className="flex items-center gap-2 cursor-pointer">
+                      <HeartPulse className="w-3.5 h-3.5 text-slate-400" /><span className="text-xs">Blood Drives</span>
+                    </Link>
+                  }
+                />
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
