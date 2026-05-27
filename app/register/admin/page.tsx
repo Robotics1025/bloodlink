@@ -103,7 +103,7 @@ export default function AdminSignupPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel>Location</FieldLabel>
-                    <Select value={form.location} onValueChange={(v) => setForm(p => ({ ...p, location: v }))}>
+                    <Select value={form.location} onValueChange={(v) => setForm(p => ({ ...p, location: v || "" }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select City" />
                       </SelectTrigger>
