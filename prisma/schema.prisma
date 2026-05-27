@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum BloodGroup {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+}
+
+enum UrgencyLevel {
+  CRITICAL
+  URGENT
+  NORMAL
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  PARTIAL
+  FULFILLED
+  CANCELLED
+}
+
+enum HospitalStatus {
+  PENDING
+  APPROVED
+  DISABLED
+}
+
+enum DriveStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+enum UserRole {
+  DONOR
+  HOSPITAL
+  ADMIN
+}
+
+enum DonorAvailability {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+model Donor {
+  id                 Int               @id @default(autoincrement())
+  fullName           String            @db.VarChar(255)
+  email              String            @unique @db.VarChar(255)
+  phone              String            @db.VarChar(20)
+  passwordHash       String            @db.VarChar(255)
+  bloodGroup         BloodGroup
+  location           String            @db.VarChar(255)
+  availabilityStatus DonorAvailability @default(AVAILABLE)
+  lastDonationDate   DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  appointments  Appointment[]
+  notifications Notification[]
+
+  @@map("donors")
+}
+
+model Hospital {
+  id            Int            @id @default(autoincrement())
+  hospitalName  String         @db.VarChar(255)
+  email         String         @unique @db.VarChar(255)
+  phone         String         @db.VarChar(20)
+  passwordHash  String         @db.VarChar(255)
+  location      String         @db.VarChar(255)
+  licenseNumber String         @db.VarChar(100)
+  status        HospitalStatus @default(PENDING)
+  avatarUrl     String?        @db.VarChar(512)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  bloodRequests BloodRequest[]
+  inventory     Inventory[]
+  notifications Notification[]
+
+  @@map("hospitals")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  fullName     String   @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @db.VarChar(255)
+  role         String   @default("SUPER_ADMIN") @db.VarChar(50)
+  avatarUrl    String?  @db.VarChar(512)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bloodDrives BloodDrive[]
+
+  @@map("admins")
+}
+
+model BloodRequest {
+  id             Int           @id @default(autoincrement())
+  hospitalId     Int
+  bloodGroup     BloodGroup
+  unitsRequired  Int
+  urgencyLevel   UrgencyLevel  @default(NORMAL)
+  reason         String?       @db.Text
+  location       String        @db.VarChar(255)
+  status         RequestStatus @default(PENDING)
+  unitsFulfilled Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId])
+  @@index([bloodGroup])
+  @@index([status])
+  @@map("blood_requests")
+}
+
+model Inventory {
+  id             Int        @id @default(autoincrement())
+  hospitalId     Int
+  bloodGroup     BloodGroup
+  availableUnits Int        @default(0)
+  expiryDate     DateTime?
+  lastUpdated    DateTime   @default(now()) @updatedAt
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([hospitalId, bloodGroup])
+  @@index([hospitalId])
+  @@map("inventory")
+}
+
+model BloodDrive {
+  id          Int         @id @default(autoincrement())
+  title       String      @db.VarChar(255)
+  location    String      @db.VarChar(255)
+  date        DateTime
+  startTime   String      @db.VarChar(10)
+  endTime     String      @db.VarChar(10)
+  status      DriveStatus @default(DRAFT)
+  description String?     @db.Text
+  createdById Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  createdBy    Admin         @relation(fields: [createdById], references: [id])
+  appointments Appointment[]
+
+  @@index([status])
+  @@map("blood_drives")
+}
+
+model Appointment {
+  id              Int               @id @default(autoincrement())
+  donorId         Int
+  bloodDriveId    Int
+  appointmentDate DateTime
+  appointmentTime String            @db.VarChar(10)
+  status          AppointmentStatus @default(CONFIRMED)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  donor      Donor      @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  bloodDrive BloodDrive @relation(fields: [bloodDriveId], references: [id], onDelete: Cascade)
+
+  @@index([donorId])
+  @@index([bloodDriveId])
+  @@map("appointments")
+}
+
+model Notification {
+  id         Int                @id @default(autoincrement())
+  userId     Int
+  userRole   UserRole
+  title      String             @db.VarChar(255)
+  message    String             @db.Text
+  status     NotificationStatus @default(UNREAD)
+  donorId    Int?
+  hospitalId Int?
+  createdAt  DateTime           @default(now())
+
+  donor    Donor?    @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  hospital Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([userId, userRole])
+  @@index([status])
+  @@map("notifications")
+}

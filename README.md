@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blood Link System
+
+A real-time blood donation and emergency blood request management platform connecting hospitals, blood donors, and administrators.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router) + TypeScript
+- **Styling:** Tailwind CSS v4 + shadcn/ui (base-ui)
+- **Charts:** Recharts
+- **ORM:** Prisma v7 with MariaDB/MySQL adapter
+- **Auth:** NextAuth.js v5 (JWT, role-based)
+- **Validation:** Zod v4
 
 ## Getting Started
 
-First, run the development server:
+### 1. Configure Database
+
+Edit `.env` with your MySQL/MariaDB connection string:
+
+```env
+DATABASE_URL="mysql://root:password@localhost:3306/blood_link_db"
+AUTH_SECRET="your-secret-key-at-least-32-characters"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### 2. Push Database Schema
+
+```bash
+npm run db:push
+```
+
+### 3. Seed the Database
+
+```bash
+npm run db:seed
+```
+
+This creates:
+- **Admin:** `admin@bloodlink.com` / `admin123`
+- **Hospital:** `nairobi@bloodlink.com` / `hospital123`
+- **Donor:** `james@bloodlink.com` / `donor123`
+
+### 4. Start Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Public
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page with hero, stats, blood drives preview |
+| `/login` | Sign in (select role: Donor / Hospital / Admin) |
+| `/register/donor` | Donor registration form |
+| `/register/hospital` | Hospital registration form |
 
-## Learn More
+### Donor Portal (`/donor/*`)
+| Route | Description |
+|-------|-------------|
+| `/donor/dashboard` | Overview: blood group, appointments, requests, drives |
+| `/donor/requests` | Browse + filter all pending blood requests |
+| `/donor/drives` | Upcoming blood drives + schedule appointment |
+| `/donor/appointments` | My appointments with cancel action |
+| `/donor/notifications` | Notifications with mark-as-read |
+| `/donor/profile` | Edit profile, availability status |
 
-To learn more about Next.js, take a look at the following resources:
+### Hospital Portal (`/hospital/*`)
+| Route | Description |
+|-------|-------------|
+| `/hospital/dashboard` | Stats: requests, inventory, alerts |
+| `/hospital/post-request` | Post blood request (auto-checks inventory) |
+| `/hospital/requests` | All requests with status filter tabs |
+| `/hospital/inventory` | Inventory per blood group (update stock) |
+| `/hospital/reports` | Recharts: trends, blood group breakdown |
+| `/hospital/profile` | Edit hospital info |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Admin Portal (`/admin/*`)
+| Route | Description |
+|-------|-------------|
+| `/admin/dashboard` | System-wide stats + recent activity |
+| `/admin/donors` | Manage donors: search, activate, delete |
+| `/admin/hospitals` | Approve/disable hospitals |
+| `/admin/inventory` | System-wide inventory management |
+| `/admin/drives` | Create/publish/cancel blood drives |
+| `/admin/notifications` | Broadcast to donors or hospitals |
+| `/admin/reports` | System-wide Recharts analytics |
+| `/admin/settings` | Admin profile + password change |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture
 
-## Deploy on Vercel
+```
+blood-link-system/
+├── app/                    # Next.js App Router
+│   ├── page.tsx           # Landing page
+│   ├── login/             # Auth pages
+│   ├── register/          # Registration pages
+│   ├── donor/             # Donor dashboard
+│   ├── hospital/          # Hospital dashboard
+│   ├── admin/             # Admin dashboard
+│   └── api/               # API routes
+├── components/
+│   ├── ui/                # shadcn/ui components
+│   ├── layout/            # Sidebars + TopNav
+│   ├── dashboard/         # StatCard, BloodRequestCard
+│   └── forms/             # Form components
+├── core/
+│   └── use-cases/         # Server actions (business logic)
+├── lib/
+│   ├── auth.ts            # NextAuth config
+│   ├── prisma.ts          # Prisma client
+│   └── utils.ts           # Helpers + color utilities
+└── prisma/
+    ├── schema.prisma      # Database models
+    └── seed.ts            # Seed script
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Blood Request Workflow
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+Hospital posts request
+       ↓
+System checks inventory
+       ↓
+Enough stock → APPROVED (deduct from inventory)
+Partial stock → PARTIAL  (deduct available, notify donors)
+No stock     → PENDING   (notify matching donors by blood group)
+```
+
+## Scripts
+
+```bash
+npm run dev          # Development server
+npm run build        # Production build
+npm run db:push      # Push schema to database
+npm run db:seed      # Seed with test data
+npm run db:studio    # Prisma Studio (GUI)
+```
