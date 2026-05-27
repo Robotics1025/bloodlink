@@ -32,7 +32,7 @@ export async function GET() {
     prisma.donor.count(),
     prisma.hospital.count(),
     prisma.bloodRequest.count(),
-    prisma.bloodRequest.count({ where: { status: "FULFILLED" } }),
+    prisma.bloodRequest.count({ where: { status: { in: ["FULFILLED", "APPROVED"] } } }),
     prisma.bloodRequest.groupBy({
       by: ["hospitalId"],
       _count: { id: true },
@@ -53,7 +53,7 @@ export async function GET() {
   const topHospitals = await Promise.all(
     topHospitalsRaw.map(async (h) => {
       const hospital = await prisma.hospital.findUnique({ where: { id: h.hospitalId }, select: { hospitalName: true } })
-      const fulfilled = await prisma.bloodRequest.count({ where: { hospitalId: h.hospitalId, status: "FULFILLED" } })
+      const fulfilled = await prisma.bloodRequest.count({ where: { hospitalId: h.hospitalId, status: { in: ["FULFILLED", "APPROVED"] } } })
       return { name: hospital?.hospitalName ?? "Unknown", requests: h._count.id, fulfilled }
     }),
   )
