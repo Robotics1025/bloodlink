@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { AlertCircle, CheckCircle, Droplet, Heart, Bell, Calendar, Loader2, ArrowRight, ArrowLeft } from "lucide-react"
+import { AlertCircle, CheckCircle, Droplet, Heart, Bell, Calendar, Loader2, ArrowRight, ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { BLOOD_GROUPS } from "@/lib/utils"
 
 export function DonorSignupForm({ className, ...props }: React.ComponentProps<"div">) {
@@ -40,6 +40,8 @@ export function DonorSignupForm({ className, ...props }: React.ComponentProps<"d
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }))
@@ -151,7 +153,7 @@ export function DonorSignupForm({ className, ...props }: React.ComponentProps<"d
                     <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-500">
                       <Field>
                         <FieldLabel htmlFor="fullName">Full Name</FieldLabel>
-                        <Input id="fullName" placeholder="James Mwangi" value={form.fullName} onChange={set("fullName")} className="h-12" required />
+                        <Input id="fullName" placeholder="Kato Emmanuel" value={form.fullName} onChange={set("fullName")} className="h-12" required />
                       </Field>
                       <Field>
                         <FieldLabel htmlFor="email">Email Address</FieldLabel>
@@ -164,11 +166,11 @@ export function DonorSignupForm({ className, ...props }: React.ComponentProps<"d
                     <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-500">
                       <Field>
                         <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
-                        <Input id="phone" type="tel" placeholder="+254 700 000 000" value={form.phone} onChange={set("phone")} className="h-12" required />
+                        <Input id="phone" type="tel" placeholder="+256 700 000 000" value={form.phone} onChange={set("phone")} className="h-12" required />
                       </Field>
                       <Field>
                         <FieldLabel htmlFor="location">Location / City</FieldLabel>
-                        <Input id="location" placeholder="Nairobi, Kenya" value={form.location} onChange={set("location")} className="h-12" required />
+                        <Input id="location" placeholder="Kampala, Uganda" value={form.location} onChange={set("location")} className="h-12" required />
                       </Field>
                     </div>
                   )}
@@ -191,11 +193,29 @@ export function DonorSignupForm({ className, ...props }: React.ComponentProps<"d
                       <div className="grid grid-cols-2 gap-4">
                         <Field>
                           <FieldLabel htmlFor="password">Password</FieldLabel>
-                          <Input id="password" type="password" placeholder="Min 6 chars" value={form.password} onChange={set("password")} className="h-12" required minLength={6} autoComplete="new-password" />
+                          <div className="relative">
+                            <Input id="password" type={showPassword ? "text" : "password"} placeholder="Min 6 chars" value={form.password} onChange={set("password")} className="h-12 pr-10" required minLength={6} autoComplete="new-password" />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
                         </Field>
                         <Field>
                           <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                          <Input id="confirmPassword" type="password" placeholder="Repeat" value={form.confirmPassword} onChange={set("confirmPassword")} className="h-12" required autoComplete="new-password" />
+                          <div className="relative">
+                            <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Repeat" value={form.confirmPassword} onChange={set("confirmPassword")} className="h-12 pr-10" required autoComplete="new-password" />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
                         </Field>
                       </div>
                     </div>

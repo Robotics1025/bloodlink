@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import Image from "next/image"
-import { AlertCircle, Droplet, Eye, EyeOff, Loader2 } from "lucide-react"
+import { AlertCircle, Droplet, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react"
 
 type Role = "donor" | "hospital" | "admin"
 
@@ -76,7 +76,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           <form onSubmit={handleSubmit} className="p-6 md:p-8">
             <FieldGroup>
               {/* Header */}
-              <div className="flex flex-col items-center gap-2 text-center">
+              <div className="flex flex-col items-center gap-2 text-center relative">
+                <Link href="/" className="absolute left-0 top-0 text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" title="Back to Home">
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </Link>
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 mb-1">
                   <Droplet className="h-5 w-5 fill-white text-white" />
                 </div>
@@ -205,7 +210,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3">
                   <p className="text-xs font-semibold text-white/90 leading-snug">
-                    Connecting donors &amp; hospitals across Kenya
+                    Connecting donors &amp; hospitals across Uganda
                   </p>
                 </div>
               </div>

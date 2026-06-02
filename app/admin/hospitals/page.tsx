@@ -49,13 +49,13 @@ const STATUS_STYLE: Record<HospitalStatus, string> = {
 }
 const STATUS_DOT: Record<HospitalStatus, string> = {
   PENDING:  "bg-yellow-400",
-  APPROVED: "bg-green-500",
+  APPROVED: "bg-[#10b981]",
   DISABLED: "bg-gray-400",
 }
 
 const AVATAR_COLORS = [
   "bg-blue-500","bg-teal-500","bg-indigo-500","bg-cyan-500",
-  "bg-sky-500","bg-violet-500","bg-emerald-500","bg-slate-500",
+  "bg-[#e13a48]","bg-violet-500","bg-[#10b981]","bg-slate-500",
 ]
 
 const PAGE_SIZE = 10
@@ -138,59 +138,57 @@ export default function ManageHospitalsPage() {
   const disabled = hospitals.filter((h) => h.status === "DISABLED").length
 
   const actionLabel = (h: Hospital) => {
-    if (h.status === "PENDING")  return { label: "Approve", action: "APPROVE" as const, cls: "border-green-200 text-green-700 hover:bg-green-50", Icon: CheckCircle }
+    if (h.status === "PENDING")  return { label: "Approve", action: "APPROVE" as const, cls: "border-green-200 text-[#10b981] hover:bg-green-50", Icon: CheckCircle }
     if (h.status === "APPROVED") return { label: "Disable", action: "DISABLE" as const, cls: "border-orange-200 text-orange-600 hover:bg-orange-50", Icon: XCircle }
-    return { label: "Enable", action: "ENABLE" as const, cls: "border-green-200 text-green-700 hover:bg-green-50", Icon: CheckCircle }
+    return { label: "Enable", action: "ENABLE" as const, cls: "border-green-200 text-[#10b981] hover:bg-green-50", Icon: CheckCircle }
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <div className="flex flex-col gap-6 p-4 md:p-8 bg-[#fafbfe] min-h-screen">
       {/* Heading */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manage Hospitals</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Review, approve, disable, or remove hospital registrations</p>
+          <h1 className="text-3xl font-extrabold text-[#0a1c35]">Manage Hospitals</h1>
+          <p className="text-sm text-slate-500 mt-1">Review, approve, disable, or remove hospital registrations</p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchHospitals} disabled={loading} className="gap-2 self-start sm:self-auto">
+        <Button variant="outline" size="sm" onClick={fetchHospitals} disabled={loading} className="gap-2 self-start sm:self-auto rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50 font-bold">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />Refresh
         </Button>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
         {[
-          { label: "Total",    value: hospitals.length, color: "text-blue-600",   bg: "bg-blue-50",   Icon: Building2 },
-          { label: "Approved", value: approved,         color: "text-green-600",  bg: "bg-green-50",  Icon: ShieldCheck },
-          { label: "Pending",  value: pending,          color: "text-yellow-600", bg: "bg-yellow-50", Icon: Clock },
-          { label: "Disabled", value: disabled,         color: "text-gray-500",   bg: "bg-gray-100",  Icon: XCircle },
+          { label: "Total",    value: hospitals.length, color: "text-[#e13a48]",   bg: "bg-[#fef2f2]",   Icon: Building2 },
+          { label: "Approved", value: approved,         color: "text-[#10b981]",  bg: "bg-green-50",  Icon: ShieldCheck },
+          { label: "Pending",  value: pending,          color: "text-[#f59e0b]", bg: "bg-yellow-50", Icon: Clock },
+          { label: "Disabled", value: disabled,         color: "text-slate-500",   bg: "bg-slate-100",  Icon: XCircle },
         ].map(({ label, value, color, bg, Icon }) => (
-          <Card key={label} className="border shadow-xs">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${bg} shrink-0`}>
-                <Icon className={`h-5 w-5 ${color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold tabular-nums">{value}</p>
-                <p className="text-xs text-muted-foreground">{label}</p>
-              </div>
-            </CardContent>
+          <Card key={label} className="border border-slate-100 shadow-sm rounded-2xl flex items-center p-6 gap-4">
+            <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center shrink-0`}>
+              <Icon className={`w-7 h-7 ${color}`} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-600">{label}</p>
+              <h3 className="text-3xl font-extrabold text-[#0a1c35] mt-0.5">{value}</h3>
+            </div>
           </Card>
         ))}
       </div>
 
       {/* Table card */}
-      <Card className="shadow-xs">
-        <CardHeader className="pb-4 border-b">
+      <Card className="shadow-sm border-slate-100 rounded-2xl">
+        <CardHeader className="pb-4 border-b border-slate-100">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input placeholder="Search name, email, location, license…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+              <Input placeholder="Search name, email, location, license…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 rounded-lg border-slate-200 text-sm" />
             </div>
             <div className="flex items-center gap-2">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <Filter className="h-4 w-4 text-slate-400 shrink-0" />
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "ALL")}>
-                <SelectTrigger className="h-9 w-36 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectTrigger className="h-10 w-36 text-xs font-bold rounded-lg border-slate-200"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-xl">
                   <SelectItem value="ALL">All Statuses</SelectItem>
                   <SelectItem value="PENDING">Pending</SelectItem>
                   <SelectItem value="APPROVED">Approved</SelectItem>
@@ -198,10 +196,10 @@ export default function ManageHospitalsPage() {
                 </SelectContent>
               </Select>
               {(search || statusFilter !== "ALL") && (
-                <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground"
+                <Button variant="ghost" size="sm" className="h-10 text-xs font-bold text-slate-500 hover:text-slate-800"
                   onClick={() => { setSearch(""); setStatusFilter("ALL") }}>Clear</Button>
               )}
-              <span className="text-xs text-muted-foreground">{filtered.length} of {hospitals.length}</span>
+              <span className="text-xs font-bold text-slate-400 ml-2">{filtered.length} of {hospitals.length}</span>
             </div>
           </div>
         </CardHeader>
@@ -209,72 +207,74 @@ export default function ManageHospitalsPage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="pl-6 text-xs w-[240px]">Hospital</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell">Location</TableHead>
-                  <TableHead className="text-xs hidden lg:table-cell">License</TableHead>
-                  <TableHead className="text-xs hidden lg:table-cell">Phone</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs hidden sm:table-cell">Registered</TableHead>
-                  <TableHead className="text-xs pr-6 text-right">Actions</TableHead>
+              <TableHeader className="bg-[#fafbfe]">
+                <TableRow className="border-b border-slate-100 hover:bg-transparent">
+                  <TableHead className="pl-6 text-xs font-bold text-slate-500 uppercase tracking-wider h-10 w-[240px]">Hospital</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-500 uppercase tracking-wider h-10 hidden md:table-cell">Location</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-500 uppercase tracking-wider h-10 hidden lg:table-cell">License</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-500 uppercase tracking-wider h-10 hidden lg:table-cell">Phone</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-500 uppercase tracking-wider h-10">Status</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-500 uppercase tracking-wider h-10 hidden sm:table-cell">Registered</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-500 uppercase tracking-wider h-10 pr-6 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow><TableCell colSpan={7} className="py-16 text-center">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mt-2">Loading hospitals…</p>
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-[#e13a48]" />
+                    <p className="text-sm font-bold text-slate-500 mt-2">Loading hospitals…</p>
                   </TableCell></TableRow>
                 ) : paginated.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="py-16 text-center">
-                    <Building2 className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-                    <p className="text-sm font-medium text-muted-foreground">No hospitals found</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">Try adjusting filters</p>
+                    <Building2 className="h-10 w-10 mx-auto text-slate-300 mb-3" />
+                    <p className="text-sm font-bold text-slate-500">No hospitals found</p>
+                    <p className="text-xs font-medium text-slate-400 mt-1">Try adjusting filters</p>
                   </TableCell></TableRow>
                 ) : paginated.map((h, i) => {
                   const colorIdx = hospitals.findIndex((x) => x.id === h.id) % AVATAR_COLORS.length
                   const { label, action, cls, Icon } = actionLabel(h)
                   return (
-                    <TableRow key={h.id}>
+                    <TableRow key={h.id} className="border-b border-slate-50 hover:bg-slate-50/50">
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 shrink-0">
-                            <AvatarFallback className={`${AVATAR_COLORS[colorIdx]} text-white text-xs font-bold`}>
+                          <Avatar className="h-9 w-9 shrink-0 rounded-xl">
+                            <AvatarFallback className={`${AVATAR_COLORS[colorIdx]} text-white text-xs font-bold rounded-xl`}>
                               {initials(h.hospitalName)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{h.hospitalName}</p>
-                            <p className="text-xs text-muted-foreground truncate">{h.email}</p>
+                            <p className="text-sm font-bold text-[#0a1c35] truncate">{h.hospitalName}</p>
+                            <p className="text-xs font-medium text-slate-400 truncate">{h.email}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground max-w-[160px]">
-                          <MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{h.location}</span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 max-w-[160px]">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{h.location}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden lg:table-cell text-xs font-mono text-muted-foreground">{h.licenseNumber}</TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{h.phone}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-xs font-mono font-bold text-slate-500">{h.licenseNumber}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-xs font-bold text-slate-500">{h.phone}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={STATUS_STYLE[h.status]}>
-                          <span className={`mr-1.5 h-1.5 w-1.5 rounded-full inline-block ${STATUS_DOT[h.status]}`} />
-                          {h.status}
-                        </Badge>
+                        <div className="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-full w-fit">
+                          <span className={`h-1.5 w-1.5 rounded-full inline-block ${STATUS_DOT[h.status]}`} />
+                          <span className={`text-xs font-bold capitalize ${STATUS_STYLE[h.status].split(' ')[2]}`}>
+                            {h.status.toLowerCase()}
+                          </span>
+                        </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{fmtDate(h.createdAt)}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-xs font-bold text-slate-500">{fmtDate(h.createdAt)}</TableCell>
                       <TableCell className="pr-6">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Button variant="outline" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={() => setViewHospital(h)} title="View details"><Eye className="h-3.5 w-3.5" /></Button>
-                          <Button variant="outline" size="icon" className={`h-8 w-8 ${cls}`}
+                          <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-slate-400 hover:text-[#0a1c35] border-slate-200"
+                            onClick={() => setViewHospital(h)} title="View details"><Eye className="h-4 w-4" /></Button>
+                          <Button variant="outline" size="icon" className={`h-8 w-8 rounded-lg ${cls}`}
                             onClick={() => setConfirm({ hospital: h, action })} title={label}>
-                            <Icon className="h-3.5 w-3.5" />
+                            <Icon className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="icon" className="h-8 w-8 border-red-200 text-red-600 hover:bg-red-50"
+                          <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg border-red-200 text-red-600 hover:bg-red-50"
                             onClick={() => setConfirm({ hospital: h, action: "DELETE" })} title="Delete">
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -287,13 +287,13 @@ export default function ManageHospitalsPage() {
 
           {/* Pagination */}
           {!loading && filtered.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/20">
-              <p className="text-xs text-muted-foreground">
-                Showing <span className="font-medium">{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-medium">{filtered.length}</span>
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-[#fafbfe]">
+              <p className="text-xs font-bold text-slate-400">
+                Showing <span className="text-[#0a1c35]">{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="text-[#0a1c35]">{filtered.length}</span>
               </p>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                  <ChevronLeft className="h-4 w-4" />
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg border-slate-200" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+                  <ChevronLeft className="h-4 w-4 text-slate-500" />
                 </Button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
@@ -302,13 +302,13 @@ export default function ManageHospitalsPage() {
                     acc.push(p); return acc
                   }, [])
                   .map((p, idx) => p === "…"
-                    ? <span key={`e${idx}`} className="px-1 text-muted-foreground text-sm">…</span>
+                    ? <span key={`e${idx}`} className="px-1 text-slate-400 text-sm font-bold">…</span>
                     : <Button key={p} variant={page === p ? "default" : "outline"} size="icon"
-                        className={`h-8 w-8 text-xs ${page === p ? "bg-red-600 hover:bg-red-700 text-white border-red-600" : ""}`}
+                        className={`h-8 w-8 text-xs font-bold rounded-lg ${page === p ? "bg-[#e13a48] hover:bg-[#c9303d] text-white border-[#e13a48]" : "text-slate-500 border-slate-200"}`}
                         onClick={() => setPage(p as number)}>{p}</Button>
                   )}
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
-                  <ChevronRight className="h-4 w-4" />
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg border-slate-200" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
+                  <ChevronRight className="h-4 w-4 text-slate-500" />
                 </Button>
               </div>
             </div>
@@ -325,23 +325,25 @@ export default function ManageHospitalsPage() {
             return (
               <>
                 <SheetHeader className="pb-4">
-                  <SheetTitle>Hospital Details</SheetTitle>
-                  <SheetDescription>Full profile for this registered hospital</SheetDescription>
+                  <SheetTitle className="text-xl font-bold text-[#0a1c35]">Hospital Details</SheetTitle>
+                  <SheetDescription className="font-medium text-slate-500">Full profile for this registered hospital</SheetDescription>
                 </SheetHeader>
-                <div className="flex flex-col items-center gap-3 py-6 bg-muted/30 rounded-xl mb-5">
-                  <Avatar className="h-20 w-20">
-                    <AvatarFallback className={`${AVATAR_COLORS[colorIdx]} text-white text-2xl font-bold`}>
+                <div className="flex flex-col items-center gap-3 py-6 bg-[#fafbfe] border border-slate-100 rounded-2xl mb-5">
+                  <Avatar className="h-20 w-20 rounded-2xl shadow-sm">
+                    <AvatarFallback className={`${AVATAR_COLORS[colorIdx]} text-white text-2xl font-bold rounded-2xl`}>
                       {initials(viewHospital.hospitalName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-center">
-                    <h2 className="text-lg font-bold">{viewHospital.hospitalName}</h2>
-                    <p className="text-sm text-muted-foreground">{viewHospital.email}</p>
+                    <h2 className="text-lg font-bold text-[#0a1c35]">{viewHospital.hospitalName}</h2>
+                    <p className="text-sm font-medium text-slate-500">{viewHospital.email}</p>
                   </div>
-                  <Badge variant="outline" className={STATUS_STYLE[viewHospital.status]}>
-                    <span className={`mr-1.5 h-1.5 w-1.5 rounded-full inline-block ${STATUS_DOT[viewHospital.status]}`} />
-                    {viewHospital.status}
-                  </Badge>
+                  <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full w-fit border border-slate-100">
+                    <span className={`h-2 w-2 rounded-full inline-block ${STATUS_DOT[viewHospital.status]}`} />
+                    <span className={`text-xs font-bold capitalize ${STATUS_STYLE[viewHospital.status].split(' ')[2]}`}>
+                      {viewHospital.status.toLowerCase()}
+                    </span>
+                  </div>
                 </div>
                 <div className="space-y-3 mb-6">
                   {[
@@ -351,27 +353,27 @@ export default function ManageHospitalsPage() {
                     { icon: FileText, label: "License No.",  value: viewHospital.licenseNumber },
                     { icon: Calendar, label: "Registered",   value: fmtDateLong(viewHospital.createdAt) },
                   ].map(({ icon: Ic, label, value }) => (
-                    <div key={label} className="flex items-start gap-3 px-4 py-3 rounded-lg bg-muted/30">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background border">
-                        <Ic className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div key={label} className="flex items-start gap-4 px-4 py-3.5 rounded-xl bg-[#fafbfe] border border-slate-50">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-slate-100">
+                        <Ic className="h-4 w-4 text-[#e13a48]" />
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">{label}</p>
-                        <p className="text-sm font-medium">{value}</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</p>
+                        <p className="text-sm font-bold text-[#0a1c35] mt-0.5">{value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <Separator className="mb-5" />
-                <div className="flex flex-col gap-2">
+                <Separator className="mb-5 bg-slate-100" />
+                <div className="flex flex-col gap-3">
                   <Button variant="outline"
                     className={viewHospital.status === "APPROVED"
-                      ? "border-orange-200 text-orange-700 hover:bg-orange-50 gap-2"
-                      : "border-green-200 text-green-700 hover:bg-green-50 gap-2"}
+                      ? "border-orange-200 text-orange-700 hover:bg-orange-50 gap-2 h-11 rounded-xl font-bold"
+                      : "border-green-200 text-[#10b981] hover:bg-green-50 gap-2 h-11 rounded-xl font-bold"}
                     onClick={() => { setConfirm({ hospital: viewHospital, action }); setViewHospital(null) }}>
                     <Icon className="h-4 w-4" />{label} Hospital
                   </Button>
-                  <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 gap-2"
+                  <Button variant="outline" className="border-red-200 text-[#e13a48] hover:bg-red-50 gap-2 h-11 rounded-xl font-bold"
                     onClick={() => { setConfirm({ hospital: viewHospital, action: "DELETE" }); setViewHospital(null) }}>
                     <Trash2 className="h-4 w-4" />Delete Hospital
                   </Button>
@@ -384,7 +386,7 @@ export default function ManageHospitalsPage() {
 
       {/* ── Confirm Dialog ── */}
       <Dialog open={!!confirm} onOpenChange={() => setConfirm(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm rounded-2xl">
           {confirm && (() => {
             const isDelete  = confirm.action === "DELETE"
             const isApprove = confirm.action === "APPROVE" || confirm.action === "ENABLE"
@@ -392,28 +394,28 @@ export default function ManageHospitalsPage() {
             return (
               <>
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isDelete ? "bg-red-100" : isApprove ? "bg-green-100" : "bg-orange-100"}`}>
-                      {isDelete  ? <AlertTriangle className="h-4 w-4 text-red-600" /> :
-                       isApprove ? <CheckCircle   className="h-4 w-4 text-green-600" /> :
-                                   <XCircle       className="h-4 w-4 text-orange-600" />}
+                  <DialogTitle className="flex items-center gap-3 text-lg font-bold text-[#0a1c35]">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isDelete ? "bg-red-50" : isApprove ? "bg-green-50" : "bg-orange-50"}`}>
+                      {isDelete  ? <AlertTriangle className="h-5 w-5 text-[#e13a48]" /> :
+                       isApprove ? <CheckCircle   className="h-5 w-5 text-[#10b981]" /> :
+                                   <XCircle       className="h-5 w-5 text-orange-500" />}
                     </div>
                     {isDelete ? "Delete Hospital" : isApprove ? "Approve Hospital" : "Disable Hospital"}
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription className="font-medium text-slate-500 pt-2">
                     {isDelete  ? "This action is permanent and cannot be undone." :
                      isApprove ? "The hospital will be able to post blood requests and manage inventory." :
                                  "The hospital will lose access to the platform until re-enabled."}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="rounded-lg border bg-muted/40 px-4 py-3">
-                  <p className="text-sm font-medium">{confirm.hospital.hospitalName}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{confirm.hospital.email}</p>
+                <div className="rounded-xl border border-slate-100 bg-[#fafbfe] px-4 py-3 my-2">
+                  <p className="text-sm font-bold text-[#0a1c35]">{confirm.hospital.hospitalName}</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">{confirm.hospital.email}</p>
                 </div>
-                <DialogFooter className="gap-2">
-                  <Button variant="outline" onClick={() => setConfirm(null)}>Cancel</Button>
+                <DialogFooter className="gap-2 sm:gap-0 mt-2">
+                  <Button variant="outline" onClick={() => setConfirm(null)} className="rounded-xl font-bold border-slate-200 text-slate-600">Cancel</Button>
                   <Button onClick={executeAction} disabled={actionLoading}
-                    className={`gap-2 text-white ${isDelete ? "bg-red-600 hover:bg-red-700" : isApprove ? "bg-green-600 hover:bg-green-700" : "bg-orange-600 hover:bg-orange-700"}`}>
+                    className={`gap-2 text-white rounded-xl font-bold ${isDelete ? "bg-[#e13a48] hover:bg-[#c9303d]" : isApprove ? "bg-[#10b981] hover:bg-[#059669]" : "bg-orange-500 hover:bg-orange-600"}`}>
                     {actionLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                     {isDelete ? "Delete" : isApprove ? "Yes, Approve" : "Yes, Disable"}
                   </Button>

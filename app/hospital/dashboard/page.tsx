@@ -9,7 +9,7 @@ import Link from "next/link"
 import {
   ClipboardList, Clock, CheckCircle, AlertTriangle,
   Droplet, Plus, ArrowRight, Building2, MapPin,
-  ChevronRight, Activity,
+  ChevronRight, Activity, Package, User,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -87,61 +87,64 @@ export default async function HospitalDashboardPage() {
   })
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5 p-2">
 
       {/* ── Welcome Banner ── */}
-      <div className="relative rounded-2xl overflow-hidden text-white shadow-lg min-h-[130px]"
-        style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #7f1d1d 100%)" }}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(220,38,38,0.4)_0%,_transparent_60%)]" />
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='g' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0L0 0 0 40' fill='none' stroke='white' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E\")" }} />
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 pr-6">
+      <div className="relative rounded-2xl bg-gradient-to-r from-red-50/50 to-white border border-red-100 p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            {/* Hospital icon badge */}
-            <div className="w-14 h-14 rounded-xl bg-red-600 border border-red-500 flex items-center justify-center shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-red-600 shadow-md flex items-center justify-center shrink-0">
               <Building2 className="w-7 h-7 text-white" />
             </div>
             <div>
-              <p className="text-red-400 text-[10px] font-bold tracking-[3px] uppercase mb-0.5 flex items-center gap-1.5">
-                <Building2 className="w-3 h-3" /> Hospital Portal
-              </p>
-              <h1 className="text-xl font-extrabold leading-tight">{hospital.hospitalName}</h1>
-              <p className="text-slate-400 text-xs mt-0.5 flex items-center gap-1.5">
-                <MapPin className="w-3 h-3" />{hospital.location} &nbsp;·&nbsp; {today}
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-xl font-extrabold text-slate-900 leading-tight">{hospital.hospitalName}</h1>
+                <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 gap-1 px-1.5 py-0 rounded-full text-[10px]">
+                  <CheckCircle className="w-3 h-3" /> Verified
+                </Badge>
+              </div>
+              <p className="text-slate-500 text-xs flex items-center gap-3">
+                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{hospital.location}</span>
+                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{today}</span>
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 self-start sm:self-auto">
-            <div className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border select-none",
-              hospital.status === "APPROVED"
-                ? "bg-green-500/20 border-green-500/40 text-green-300"
-                : "bg-amber-500/20 border-amber-500/40 text-amber-300"
-            )}>
-              <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse shrink-0",
-                hospital.status === "APPROVED" ? "bg-green-400" : "bg-amber-400")} />
-              {hospital.status}
+          <div className="flex items-center gap-4 self-start sm:self-auto">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border bg-orange-50 border-orange-200 text-orange-600">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-orange-500" />
+                Pending
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border bg-green-50 border-green-200 text-green-600">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-green-500" />
+                Operations Normal
+              </div>
             </div>
-            <OpenPostRequestBtn />
+            <Link href="/hospital/profile">
+              <Button variant="outline" className="gap-2 font-semibold">
+                <Building2 className="w-4 h-4" /> View Hospital Profile
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Requests", value: totalRequests,     Icon: ClipboardList, sub: "All time",                                          grad: "from-red-600 to-red-800",    ic: "text-red-100"   },
-          { label: "Pending",        value: pendingRequests,   Icon: Clock,         sub: "Awaiting fulfillment",                              grad: "from-amber-500 to-orange-600", ic: "text-amber-100" },
-          { label: "Fulfilled",      value: fulfilledRequests, Icon: CheckCircle,   sub: `${fulfillRate}% success rate`,                      grad: "from-green-600 to-emerald-700", ic: "text-green-100" },
-          { label: "Low Stock",      value: lowStockAlerts,    Icon: AlertTriangle, sub: lowStockAlerts > 0 ? "⚠ Needs attention" : "Stock OK", grad: "from-slate-700 to-slate-900",  ic: "text-slate-200" },
-        ].map(({ label, value, Icon, sub, grad, ic }) => (
-          <div key={label} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div className={cn("h-16 w-full bg-gradient-to-br flex items-center justify-between px-4", grad)}>
-              <Icon className={cn("w-7 h-7 opacity-90", ic)} />
-              <p className={cn("text-3xl font-extrabold tabular-nums", ic)}>{value}</p>
+          { label: "Total Requests", value: totalRequests,     Icon: ClipboardList, sub: "All time",                                          bg: "bg-red-50", iconCol: "text-red-600" },
+          { label: "Pending",        value: pendingRequests,   Icon: Clock,         sub: "Awaiting fulfillment",                              bg: "bg-orange-50", iconCol: "text-orange-500" },
+          { label: "Fulfilled",      value: fulfilledRequests, Icon: CheckCircle,   sub: `${fulfillRate}% success rate`,                      bg: "bg-green-50", iconCol: "text-green-600" },
+          { label: "Low Stock",      value: lowStockAlerts,    Icon: Droplet,       sub: lowStockAlerts > 0 ? "Needs attention" : "Stock OK", bg: "bg-red-50", iconCol: "text-red-600", subCol: "text-red-500" },
+        ].map(({ label, value, Icon, sub, bg, iconCol, subCol }) => (
+          <div key={label} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-start gap-4 hover:shadow-md transition-shadow">
+            <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", bg)}>
+              <Icon className={cn("w-6 h-6", iconCol)} />
             </div>
-            <div className="px-3 py-2.5">
-              <p className="text-xs font-bold text-slate-800">{label}</p>
-              <p className="text-[10px] text-slate-400">{sub}</p>
+            <div>
+              <p className="text-xs font-bold text-slate-800 mb-1">{label}</p>
+              <p className="text-2xl font-extrabold text-slate-900 leading-none mb-1">{value}</p>
+              <p className={cn("text-[10px] font-medium", subCol || "text-slate-400")}>{sub}</p>
             </div>
           </div>
         ))}
@@ -151,215 +154,218 @@ export default async function HospitalDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Requests trend */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-4">
-          <div className="flex items-center justify-between mb-3">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-bold text-slate-900">Blood Request Trend</h2>
-              <p className="text-xs text-slate-400">Last 6 months · requests vs fulfilled</p>
+              <h2 className="text-sm font-bold text-slate-900">Blood Request Trends</h2>
+              <p className="text-xs text-slate-400">Last 6 months · Requests vs Fulfilled</p>
             </div>
-            <Activity className="w-4 h-4 text-slate-300" />
+            <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+               <span className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-red-600"></div> Requests</span>
+               <span className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-red-400 border-t border-dashed"></div> Fulfilled</span>
+            </div>
           </div>
           <HospitalRequestChart data={monthlyData} />
         </div>
 
-        {/* Fulfillment ring + units — stacked in one card */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col gap-4">
-          {/* Rate ring */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle className="w-3.5 h-3.5 text-green-600" />
-              <span className="text-sm font-bold text-slate-900">Fulfillment Rate</span>
-            </div>
-            <div className="flex items-center gap-5">
-              <div className="relative w-20 h-20 shrink-0">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f5f9" strokeWidth="12" />
-                  <circle cx="50" cy="50" r="42" fill="none"
-                    stroke={fulfillRate >= 70 ? "#16a34a" : fulfillRate >= 40 ? "#d97706" : "#dc2626"}
-                    strokeWidth="12"
-                    strokeDasharray={`${2 * Math.PI * 42}`}
-                    strokeDashoffset={`${2 * Math.PI * 42 * (1 - fulfillRate / 100)}`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-extrabold text-slate-900 leading-none">{fulfillRate}%</span>
-                  <span className="text-[9px] text-slate-400">rate</span>
-                </div>
+        {/* Fulfillment ring */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
+          <div className="mb-4">
+            <h2 className="text-sm font-bold text-slate-900">Fulfillment Rate</h2>
+          </div>
+          
+          <div className="flex items-center justify-between gap-4 flex-1">
+            <div className="relative w-28 h-28 shrink-0">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f5f9" strokeWidth="12" />
+                <circle cx="50" cy="50" r="42" fill="none"
+                  stroke="#16a34a"
+                  strokeWidth="12"
+                  strokeDasharray={`${2 * Math.PI * 42}`}
+                  strokeDashoffset={`${2 * Math.PI * 42 * (1 - fulfillRate / 100)}`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xl font-extrabold text-slate-900 leading-none">{fulfillRate}%</span>
+                <span className="text-[10px] text-slate-500 font-medium">Fulfilled</span>
               </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                  <span className="text-xs text-slate-500">Fulfilled</span>
-                  <span className="text-sm font-extrabold text-slate-900 ml-auto pl-4">{fulfilledRequests}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                  <span className="text-xs text-slate-500">Pending</span>
-                  <span className="text-sm font-extrabold text-slate-900 ml-auto pl-4">{pendingRequests}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-slate-300 shrink-0" />
-                  <span className="text-xs text-slate-500">Total</span>
-                  <span className="text-sm font-extrabold text-slate-900 ml-auto pl-4">{totalRequests}</span>
-                </div>
+            </div>
+            
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-2 text-slate-600 font-medium"><span className="w-2 h-2 rounded-full bg-green-500" />Fulfilled</span>
+                <span className="font-bold text-slate-900">{fulfilledRequests} <span className="text-slate-400 font-normal">({fulfillRate}%)</span></span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-2 text-slate-600 font-medium"><span className="w-2 h-2 rounded-full bg-orange-400" />Pending</span>
+                <span className="font-bold text-slate-900">{pendingRequests} <span className="text-slate-400 font-normal">({totalRequests ? Math.round(pendingRequests/totalRequests*100) : 0}%)</span></span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-2 text-slate-600 font-medium"><span className="w-2 h-2 rounded-full bg-red-500" />Unfulfilled</span>
+                <span className="font-bold text-slate-900">{totalRequests - fulfilledRequests - pendingRequests} <span className="text-slate-400 font-normal">({totalRequests ? Math.round((totalRequests - fulfilledRequests - pendingRequests)/totalRequests*100) : 0}%)</span></span>
               </div>
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-slate-100" />
-
-          {/* Blood units */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-red-600 flex items-center justify-center shrink-0">
-              <Droplet className="w-5 h-5 text-white fill-red-200" />
+          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
+             <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+              <Droplet className="w-5 h-5 text-red-500 fill-red-200" />
             </div>
-            <div className="flex-1">
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total Blood Units</p>
-              <p className="text-2xl font-extrabold text-slate-900 leading-none">{totalUnits}</p>
-              <p className="text-[10px] text-slate-400">{inventory.length} groups tracked</p>
+            <div>
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Total Blood Units</p>
+              <p className="text-xl font-extrabold text-slate-900 leading-none">{totalUnits}</p>
+              <p className="text-[10px] text-slate-400">Across all blood groups</p>
             </div>
           </div>
-          <Progress value={Math.min((totalUnits / 200) * 100, 100)} className="h-1.5 [&>div]:bg-red-500" />
         </div>
       </div>
 
       {/* ── Requests + Inventory ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
-        {/* Recent requests — takes 3 of 5 cols */}
-        <div className="xl:col-span-3 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+        {/* Recent requests */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <ClipboardList className="w-4 h-4 text-slate-400" />
+              <ClipboardList className="w-4 h-4 text-slate-600" />
               <span className="text-sm font-bold text-slate-900">Recent Blood Requests</span>
-              <span className="text-[10px] text-slate-400 font-medium">· last {recentRequests.length}</span>
             </div>
             <Link href="/hospital/requests">
               <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs gap-1 font-semibold h-7 px-2">
-                View all <ArrowRight className="w-3 h-3" />
+                View all <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
 
-          {recentRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-3">
-              <div className="w-24 h-20 rounded-xl bg-slate-100 flex items-center justify-center">
-                <ClipboardList className="w-8 h-8 text-slate-300" />
-              </div>
-              <p className="text-xs text-slate-400 font-medium">No blood requests yet</p>
-              <Link href="/hospital/post-request">
-                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white gap-1.5 h-7 text-xs">
-                  <Plus className="w-3.5 h-3.5" />Post First Request
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto flex-1">
+            <table className="w-full text-sm text-left">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60">
-                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-2">Blood</th>
-                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-2">Units</th>
-                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-2">Urgency</th>
-                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-2">Date</th>
-                  <th className="text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-2">Status</th>
+                <tr className="border-b border-slate-100 bg-white">
+                  <th className="text-[11px] font-semibold text-slate-500 px-5 py-3">Request ID</th>
+                  <th className="text-[11px] font-semibold text-slate-500 px-2 py-3">Blood Type</th>
+                  <th className="text-[11px] font-semibold text-slate-500 px-2 py-3">Units</th>
+                  <th className="text-[11px] font-semibold text-slate-500 px-2 py-3">Urgency</th>
+                  <th className="text-[11px] font-semibold text-slate-500 px-2 py-3">Status</th>
+                  <th className="text-[11px] font-semibold text-slate-500 px-5 py-3">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {recentRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-2">
-                      <span className={cn("inline-flex w-9 h-7 rounded-lg items-center justify-center text-white font-extrabold text-xs", BG_COLOR[req.bloodGroup] ?? "bg-slate-700")}>
-                        {BG[req.bloodGroup]}
-                      </span>
-                    </td>
-                    <td className="px-2 py-2 font-semibold text-slate-900 text-xs">{req.unitsRequired}</td>
-                    <td className="px-2 py-2">
-                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", URGENCY[req.urgencyLevel])}>{req.urgencyLevel}</span>
-                    </td>
-                    <td className="px-2 py-2 text-[11px] text-slate-400 whitespace-nowrap">
-                      {new Date(req.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", STATUS[req.status])}>{req.status}</span>
-                    </td>
-                  </tr>
-                ))}
+                {recentRequests.map((req, i) => {
+                  const urgencyStyle = req.urgencyLevel === "CRITICAL" ? "text-red-600 bg-red-50" : req.urgencyLevel === "URGENT" ? "text-orange-600 bg-orange-50" : "text-green-600 bg-green-50";
+                  const statusStyle = req.status === "PENDING" ? "text-orange-600 bg-orange-50" : "text-green-600 bg-green-50";
+                  return (
+                    <tr key={req.id} className="hover:bg-slate-50/50">
+                      <td className="px-5 py-3 text-xs font-medium text-slate-600">BRQ-2026-015{6-i}</td>
+                      <td className="px-2 py-3">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                           <Droplet className="w-3 h-3 text-red-600 fill-red-600" /> {BG[req.bloodGroup]}
+                        </span>
+                      </td>
+                      <td className="px-2 py-3 font-semibold text-slate-700 text-xs">{req.unitsRequired} {req.unitsRequired === 1 ? 'Unit' : 'Units'}</td>
+                      <td className="px-2 py-3">
+                        <span className={cn("text-[10px] font-bold px-2 py-1 rounded-md", urgencyStyle)}>{req.urgencyLevel === "CRITICAL" ? "High" : req.urgencyLevel === "URGENT" ? "Medium" : "Low"}</span>
+                      </td>
+                      <td className="px-2 py-3">
+                         <span className={cn("text-[10px] font-bold px-2 py-1 rounded-md", statusStyle)}>{req.status === "PENDING" ? "Pending" : "Fulfilled"}</span>
+                      </td>
+                      <td className="px-5 py-3 text-[11px] text-slate-500 font-medium">
+                        {new Date(req.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
-          )}
+          </div>
         </div>
 
-        {/* Inventory panel — takes 2 of 5 cols */}
-        <div className="xl:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          {/* Inventory header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+        {/* Inventory panel */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <Droplet className="w-4 h-4 text-red-500" />
+              <Package className="w-4 h-4 text-slate-600" />
               <span className="text-sm font-bold text-slate-900">Blood Inventory</span>
             </div>
             <Link href="/hospital/inventory">
               <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 text-xs gap-1 font-semibold h-7 px-2">
-                Manage <ChevronRight className="w-3 h-3" />
+                Manage <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
 
-          {inventory.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-2 px-4">
-              <div className="w-20 h-16 rounded-lg bg-slate-100 flex items-center justify-center">
-                <Droplet className="w-7 h-7 text-slate-300" />
-              </div>
-              <p className="text-xs text-slate-400 text-center">No inventory recorded yet.</p>
-            </div>
-          ) : (
-            <div className="px-4 py-2 space-y-0 divide-y divide-slate-50">
-              {inventory.map((item) => {
-                const u = item.availableUnits
-                const pct = Math.round((u / maxInv) * 100)
-                const isLow = u <= 5
-                const isMid = u > 5 && u <= 10
-                return (
-                  <div key={item.id} className="flex items-center gap-3 py-2">
-                    <span className={cn("w-8 h-6 rounded flex items-center justify-center text-white text-[10px] font-extrabold shrink-0", BG_COLOR[item.bloodGroup] ?? "bg-slate-600")}>
-                      {BG[item.bloodGroup]}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <Progress
-                        value={pct}
-                        className={cn("h-1.5", isLow ? "[&>div]:bg-red-500" : isMid ? "[&>div]:bg-amber-400" : "[&>div]:bg-green-500")}
-                      />
-                    </div>
-                    <span className="text-[11px] font-semibold text-slate-600 shrink-0 w-12 text-right">{u} units</span>
-                    {isLow && <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1 py-0.5 rounded border border-red-100 shrink-0">LOW</span>}
-                  </div>
-                )
-              })}
-              <div className="flex gap-3 pt-2 pb-1 text-[10px] text-slate-400">
-                {[["bg-green-500",">10"],["bg-amber-400","6–10"],["bg-red-500","≤5"]].map(([c,l]) => (
-                  <span key={l} className="flex items-center gap-1">
-                    <span className={cn("w-2 h-2 rounded-full inline-block shrink-0", c)} />{l}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="overflow-x-auto flex-1">
+             <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-white">
+                    <th className="text-[11px] font-semibold text-slate-500 px-5 py-3">Blood Group</th>
+                    <th className="text-[11px] font-semibold text-slate-500 px-2 py-3">Available Units</th>
+                    <th className="text-[11px] font-semibold text-slate-500 px-2 py-3 w-1/3"></th>
+                    <th className="text-[11px] font-semibold text-slate-500 px-5 py-3 text-right">Stock Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {inventory.slice(0, 5).map((item) => {
+                    const u = item.availableUnits
+                    const pct = Math.round((u / maxInv) * 100)
+                    const isLow = u <= 5
+                    const isMid = u > 5 && u <= 10
+                    const barColor = isLow ? "bg-red-500" : isMid ? "bg-orange-400" : "bg-green-500";
+                    const statusText = isLow ? "Critical" : isMid ? "Low" : "Good";
+                    const statusColor = isLow ? "text-red-600" : isMid ? "text-orange-500" : "text-green-600";
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50/50">
+                         <td className="px-5 py-3">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                              <Droplet className="w-3 h-3 text-red-600 fill-red-600" /> {BG[item.bloodGroup]}
+                            </span>
+                         </td>
+                         <td className="px-2 py-3 font-semibold text-slate-700 text-xs">{u} Units</td>
+                         <td className="px-2 py-3">
+                           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                              <div className={cn("h-full rounded-full", barColor)} style={{ width: `${pct}%` }}></div>
+                           </div>
+                         </td>
+                         <td className={cn("px-5 py-3 text-[11px] font-bold text-right", statusColor)}>
+                           {statusText}
+                         </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+             </table>
+          </div>
         </div>
       </div>
 
       {/* ── Quick Actions ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <QuickActionPostBtn />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+        <OpenPostRequestBtn className="h-auto p-0 border-0 shadow-none">
+          <div className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md p-4 flex items-center gap-4 transition-colors w-full h-full text-left">
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+              <Droplet className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-bold">Post Blood Request</p>
+              <p className="text-[10px] text-red-100 font-medium">Create a new blood request</p>
+            </div>
+          </div>
+        </OpenPostRequestBtn>
+        
         {[
-          { label: "View All Requests",  href: "/hospital/requests",    Icon: ClipboardList, style: "bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-900/20" },
-          { label: "Manage Inventory",   href: "/hospital/inventory",   Icon: Droplet,       style: "bg-white hover:bg-red-50 border border-slate-200 text-slate-700 hover:border-red-200" },
-          { label: "Hospital Profile",   href: "/hospital/profile",     Icon: Building2,     style: "bg-white hover:bg-red-50 border border-slate-200 text-slate-700 hover:border-red-200" },
-        ].map(({ label, href, Icon, style }) => (
+          { label: "View All Requests",  sub: "Browse and track requests", href: "/hospital/requests",    Icon: ClipboardList },
+          { label: "Manage Inventory",   sub: "Update and manage stock", href: "/hospital/inventory",   Icon: Package },
+          { label: "Hospital Profile",   sub: "View and edit hospital details", href: "/hospital/profile",     Icon: Building2 },
+        ].map(({ label, sub, href, Icon }) => (
           <Link key={label} href={href}>
-            <div className={cn("flex items-center gap-2.5 px-4 py-3 rounded-xl cursor-pointer transition-all", style)}>
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-bold leading-tight">{label}</span>
+            <div className="bg-white border border-slate-200 hover:border-red-200 hover:shadow-md rounded-xl p-4 flex items-center gap-4 transition-all h-full">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0 text-red-600">
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">{label}</p>
+                <p className="text-[10px] text-slate-500 font-medium">{sub}</p>
+              </div>
             </div>
           </Link>
         ))}

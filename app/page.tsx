@@ -28,7 +28,7 @@ export default function HomePage() {
             <div className="flex items-center gap-8 pointer-events-auto">
               <span className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-white" />
-                <strong>Phone : (+254) 800-BLOOD-00</strong>
+                <strong>Phone : (+256) 800-BLOOD-00</strong>
               </span>
               <div className="flex items-center gap-4">
                 {["f", "X", "in", "yt"].map((s) => (
@@ -72,6 +72,8 @@ export default function HomePage() {
                 Icon: HandHeart,
                 href: "#drives",
               },
+
+              // comment
             ].map(({ img, label, title, Icon, href }) => (
               <div key={title} className="group relative">
                 {/* Image Container */}
@@ -107,41 +109,92 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── PLANS ── */}
+      {/* ── BENEFITS — What You Get ── */}
       <section className="py-24 bg-[#f7f9fb]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-[#e13a48] text-xs font-bold tracking-[4px] uppercase italic mb-3">— What We Offer —</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0a1c35]">Reasonable Plan of Treatment</h2>
+            <p className="text-[#e13a48] text-xs font-bold tracking-[4px] uppercase italic mb-3">— Why Join BloodLink —</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0a1c35]">What You Get From BloodLink</h2>
             <div className="w-12 h-1 bg-[#e13a48] mx-auto mt-4 rounded-full" />
-            <p className="text-slate-500 text-sm mt-4 max-w-lg mx-auto">Join BloodLink as a donor or partner hospital. Both plans are completely free — blood saves lives, not profit.</p>
+            <p className="text-slate-500 text-sm mt-4 max-w-lg mx-auto">Whether you are a hospital in need of blood or a donor saving lives — BloodLink empowers you with the right tools.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {[
-              { label: "Basic Plan", price: "Free", sub: "Donor", featured: false, features: ["Blood group registration","Emergency alerts","Donation history tracking","Community blood drives","Donor health reminders"], href: "/register/donor", cta: "Register as Donor" },
-              { label: "Professional Plan", price: "Free", sub: "Hospital", featured: true, features: ["Emergency blood requests","Real-time inventory dashboard","Donor pool access","Blood drive management","Priority admin support"], href: "/register/hospital", cta: "Register Hospital" },
-            ].map((plan) => (
-              <div key={plan.label} className={`rounded-2xl overflow-hidden border shadow-sm ${plan.featured ? "border-[#e13a48] shadow-red-100 shadow-lg md:scale-105" : "border-slate-200"}`}>
-                {plan.featured && <div className="bg-[#e13a48] text-white text-center text-xs font-bold py-1.5 tracking-wider">MOST POPULAR</div>}
-                <div className="p-8 text-center bg-white">
-                  <p className="text-sm font-semibold text-slate-500 mb-1">{plan.label}</p>
-                  <p className={`text-5xl font-extrabold mb-0.5 ${plan.featured ? "text-[#e13a48]" : "text-[#0a1c35]"}`}>{plan.price}</p>
-                  <p className="text-xs text-slate-400 font-medium mb-8 uppercase tracking-widest">For {plan.sub}</p>
-                  <ul className="space-y-3 text-left mb-8">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5 text-sm text-slate-600">
-                        <CheckCircle className="w-4 h-4 text-red-500 shrink-0" />{f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href={plan.href}>
-                    <Button className={`w-full font-bold ${plan.featured ? "bg-[#e13a48] hover:bg-[#c9303d] text-white" : "bg-[#0a1c35] hover:bg-slate-800 text-white"}`}>
-                      {plan.cta}
-                    </Button>
-                  </Link>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-5xl mx-auto">
+            {/* Hospitals */}
+            <div className="relative rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm group hover:shadow-xl transition-shadow duration-500">
+              <div className="h-2 bg-[#e13a48]" />
+              <div className="p-8 sm:p-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-[#fef2f2] flex items-center justify-center shrink-0">
+                    <Building2 className="w-7 h-7 text-[#e13a48]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-extrabold text-[#0a1c35]">For Hospitals</h3>
+                    <p className="text-xs font-medium text-slate-500">Partner with us to save more lives</p>
+                  </div>
                 </div>
+                <ul className="space-y-4 mb-8">
+                  {[
+                    { icon: AlertCircle, text: "Post emergency blood requests that reach donors instantly" },
+                    { icon: Activity,    text: "Real-time inventory dashboard to track blood stock levels" },
+                    { icon: Users,       text: "Access a pool of verified, ready-to-donate community members" },
+                    { icon: Calendar,    text: "Organize & manage blood drives with appointment booking" },
+                    { icon: Shield,      text: "Dedicated admin support and priority emergency handling" },
+                    { icon: Globe,       text: "Nationwide hospital network for cross-facility coordination" },
+                  ].map(({ icon: Ic, text }) => (
+                    <li key={text} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#fef2f2] flex items-center justify-center shrink-0 mt-0.5">
+                        <Ic className="w-4 h-4 text-[#e13a48]" />
+                      </div>
+                      <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/register/hospital">
+                  <Button className="w-full bg-[#e13a48] hover:bg-[#c9303d] text-white font-bold py-6 rounded-xl">
+                    <Building2 className="w-4 h-4 mr-2" />Register Your Hospital
+                  </Button>
+                </Link>
               </div>
-            ))}
+            </div>
+
+            {/* Donors */}
+            <div className="relative rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm group hover:shadow-xl transition-shadow duration-500">
+              <div className="h-2 bg-[#0a1c35]" />
+              <div className="p-8 sm:p-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+                    <Heart className="w-7 h-7 text-[#0a1c35]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-extrabold text-[#0a1c35]">For Donors</h3>
+                    <p className="text-xs font-medium text-slate-500">Every donation makes a difference</p>
+                  </div>
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {[
+                    { icon: Droplet,  text: "Register your blood group and get matched with patients in need" },
+                    { icon: Bell,     text: "Receive real-time emergency alerts when your blood type is needed" },
+                    { icon: Clock,    text: "Track your full donation history and next eligibility date" },
+                    { icon: Calendar, text: "Book appointments at community blood drives near you" },
+                    { icon: Heart,    text: "Get health reminders and tips for safe, regular donation" },
+                    { icon: Zap,      text: "Earn recognition badges and contribute to Uganda's blood supply" },
+                  ].map(({ icon: Ic, text }) => (
+                    <li key={text} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+                        <Ic className="w-4 h-4 text-[#0a1c35]" />
+                      </div>
+                      <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/register/donor">
+                  <Button className="w-full bg-[#0a1c35] hover:bg-slate-800 text-white font-bold py-6 rounded-xl">
+                    <Heart className="w-4 h-4 mr-2" />Become a Donor
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -274,7 +327,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-red-500" />+254 (800) BLOOD-00</div>
+                <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-red-500" />+256 (800) BLOOD-00</div>
                 <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-red-500" />help@bloodlink.org</div>
               </div>
             </div>

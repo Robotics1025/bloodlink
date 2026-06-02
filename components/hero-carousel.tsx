@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 
 const slides = [
   {
-    image: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=1920&q=80",
-    badge: "Save Lives Today",
-    title: "Every Drop Counts,\nBe A Hero Today",
+    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&q=80",
+    badge: "Uganda Blood Link",
+    title: "Every Drop Counts,\nSave A Ugandan Life",
   },
   {
-    image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=1920&q=80",
-    badge: "Give Blood",
-    title: "Give The Gift Of Life\nTo Those In Need",
-  }
+    image: "https://images.unsplash.com/photo-1551076805-e1869033e561?w=1920&q=80",
+    badge: "Give Blood, Give Life",
+    title: "Connecting Donors\nTo Hospitals Nationwide",
+  },
 ];
 
 export function HeroCarousel() {

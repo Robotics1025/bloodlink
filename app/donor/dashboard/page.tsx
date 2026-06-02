@@ -7,30 +7,11 @@ import Link from "next/link"
 import {
   Droplet, Calendar, Bell, Heart, MapPin,
   Clock, HeartPulse, ArrowRight, CheckCircle,
-  AlertTriangle, ChevronRight,
+  AlertTriangle, ChevronRight, Check, User
 } from "lucide-react"
 import { bloodGroupLabel } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-
-const URGENCY_STYLE: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-red-700 border-red-200",
-  URGENT:   "bg-orange-100 text-orange-700 border-orange-200",
-  NORMAL:   "bg-slate-100 text-slate-600 border-slate-200",
-}
-const BG_COLOR: Record<string, string> = {
-  O_NEG:  "bg-red-700",   O_POS:  "bg-red-500",
-  A_POS:  "bg-slate-700", A_NEG:  "bg-slate-500",
-  B_POS:  "bg-rose-600",  B_NEG:  "bg-rose-400",
-  AB_POS: "bg-red-900",   AB_NEG: "bg-red-800",
-}
-
-function greeting() {
-  const h = new Date().getHours()
-  if (h < 12) return "Good morning"
-  if (h < 17) return "Good afternoon"
-  return "Good evening"
-}
 
 export default async function DonorDashboardPage() {
   const session = await auth()
@@ -38,260 +19,309 @@ export default async function DonorDashboardPage() {
 
   const donorId = Number(session.user.id)
 
-  const [donor, appointmentCount, unreadCount, nearbyRequests, upcomingDrives] = await Promise.all([
+  const [donor, appointmentCount, upcomingDrives, completedAppointments] = await Promise.all([
     prisma.donor.findUnique({ where: { id: donorId } }),
     prisma.appointment.count({ where: { donorId } }),
-    prisma.notification.count({ where: { donorId, status: "UNREAD" } }),
-    prisma.bloodRequest.findMany({
-      where: { status: { in: ["PENDING", "PARTIAL"] } },
-      include: { hospital: true },
-      orderBy: [{ urgencyLevel: "asc" }, { createdAt: "desc" }],
-      take: 5,
-    }),
     prisma.bloodDrive.findMany({
       where: { status: "PUBLISHED", date: { gte: new Date() } },
       orderBy: { date: "asc" },
-      take: 3,
+      take: 1,
     }),
+    prisma.appointment.findMany({
+      where: { donorId, status: "COMPLETED" },
+      orderBy: { appointmentDate: "desc" },
+    })
   ])
 
   if (!donor) redirect("/login")
 
-  const firstName      = donor.fullName.split(" ")[0]
-  const isAvailable    = donor.availabilityStatus === "AVAILABLE"
-  const bloodLabel     = bloodGroupLabel(donor.bloodGroup)
-  const criticalCount  = nearbyRequests.filter((r) => r.urgencyLevel === "CRITICAL").length
+  const bloodLabel = bloodGroupLabel(donor.bloodGroup)
+  const totalDonations = completedAppointments.length
+  const livesImpacted = totalDonations * 3
+
+  // Calculate Next Eligible Date (56 days after last donation)
+  let nextEligibleDate = new Date()
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  if (donor.lastDonationDate) {
+    const lastDate = new Date(donor.lastDonationDate)
+    nextEligibleDate = new Date(lastDate.getTime() + 56 * 24 * 60 * 60 * 1000)
+    if (nextEligibleDate < today) nextEligibleDate = today
+  } else if (completedAppointments.length > 0) {
+    const lastDate = new Date(completedAppointments[0].appointmentDate)
+    nextEligibleDate = new Date(lastDate.getTime() + 56 * 24 * 60 * 60 * 1000)
+    if (nextEligibleDate < today) nextEligibleDate = today
+  }
+
+  const diffTime = Math.max(0, nextEligibleDate.getTime() - today.getTime())
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const isEligible = diffDays === 0
+
+  const progressGoal = Math.ceil((totalDonations + 1) / 5) * 5
+  const progressPercent = totalDonations === 0 ? 0 : Math.round((totalDonations / progressGoal) * 100)
 
   return (
-    <div className="flex flex-col gap-4">
-
-      {/* ══ HERO BANNER ══ */}
-      <div className="relative rounded-2xl overflow-hidden min-h-[150px] text-white shadow-lg"
-        style={{ background: "linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#7f1d1d 100%)" }}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(220,38,38,0.4)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='g' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0L0 0 0 40' fill='none' stroke='white' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E\")" }} />
-
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
-          <div className="flex items-center gap-4">
-            {/* Blood type badge */}
-            <div className={cn(
-              "w-16 h-16 rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-xl shrink-0 border-2 border-white/20",
-              BG_COLOR[donor.bloodGroup] ?? "bg-red-600"
-            )}>
-              {bloodLabel}
+    <div className="flex flex-col gap-6 px-8 pb-8 max-w-[1200px] mx-auto w-full">
+      
+      {/* ══ KPI CARDS ══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Blood Type */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left gap-3">
+          <div className="flex items-center gap-4 w-full">
+            <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+              <Droplet className="w-6 h-6 text-red-600 fill-red-600" />
             </div>
             <div>
-              <p className="text-red-400 text-[10px] font-bold tracking-[3px] uppercase mb-0.5">Donor Portal</p>
-              <h1 className="text-xl font-extrabold leading-tight">
-                {greeting()}, {firstName}! 👋
-              </h1>
-              <p className="text-slate-400 text-xs mt-0.5">
-                Your blood type is <strong className="text-white">{bloodLabel}</strong> — you can save up to <strong className="text-white">3 lives</strong> per donation.
+              <p className="text-[11px] text-slate-500 font-medium">Blood Type</p>
+              <p className="text-3xl font-bold text-slate-900">{bloodLabel}</p>
+            </div>
+          </div>
+          <span className={cn(
+            "border px-3 py-1 rounded-full text-[10px] font-bold self-start mt-auto",
+            isEligible ? "bg-green-50 text-green-700 border-green-200" : "bg-orange-50 text-orange-700 border-orange-200"
+          )}>
+            {isEligible ? "Eligible to donate" : "Ineligible right now"}
+          </span>
+        </div>
+
+        {/* Card 2: Next Eligible */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left gap-3">
+          <div className="flex items-center gap-4 w-full">
+            <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+              <Heart className="w-6 h-6 text-red-500" />
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 font-medium">Next Eligible</p>
+              <p className="text-3xl font-bold text-slate-900 flex items-baseline gap-1">
+                {isEligible ? "Now" : diffDays} {diffDays !== 0 && <span className="text-sm font-medium text-slate-500">days</span>}
               </p>
             </div>
           </div>
+          <p className="text-xs text-slate-500 mt-auto">
+            {isEligible ? "You can donate today" : nextEligibleDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </p>
+        </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-auto">
-            {/* Availability pill */}
-            <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold",
-              isAvailable
-                ? "bg-green-500/20 border-green-500/40 text-green-300"
-                : "bg-slate-500/20 border-slate-500/40 text-slate-300"
-            )}>
-              <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse",
-                isAvailable ? "bg-green-400" : "bg-slate-400")} />
-              {isAvailable ? "Available to Donate" : "Not Available"}
+        {/* Card 3: Donations */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left gap-3">
+          <div className="flex items-center gap-4 w-full">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+              <Calendar className="w-6 h-6 text-indigo-500" />
             </div>
-            {criticalCount > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-red-500/20 border-red-500/40 text-red-300 text-[11px] font-bold">
-                <AlertTriangle className="w-3 h-3" />
-                {criticalCount} Critical
+            <div>
+              <p className="text-[11px] text-slate-500 font-medium">Donations</p>
+              <p className="text-3xl font-bold text-slate-900 flex items-baseline gap-1">
+                {totalDonations} <span className="text-sm font-medium text-slate-500">total</span>
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-auto">Keep it amazing!</p>
+        </div>
+
+        {/* Card 4: Lives Impacted */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left gap-3">
+          <div className="flex items-center gap-4 w-full">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+              <User className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 font-medium">Lives Impacted</p>
+              <p className="text-3xl font-bold text-slate-900 flex items-baseline gap-1">
+                {livesImpacted}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-auto">Thank you!</p>
+        </div>
+      </div>
+
+      {/* ══ MIDDLE SECTION ══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Banner (2 cols) */}
+        <div className="lg:col-span-2 relative rounded-3xl overflow-hidden shadow-md bg-gradient-to-br from-[#d32f2f] to-[#9a0007] text-white p-8 min-h-[260px] flex flex-col justify-between">
+          <div className="absolute right-0 bottom-0 opacity-20 pointer-events-none scale-150 origin-bottom-right">
+             <Droplet className="w-64 h-64 text-white fill-white" />
+          </div>
+          <div className="relative z-10 flex flex-col gap-4">
+            <span className="border border-white/40 text-white/90 rounded-full px-3 py-1 text-[10px] font-bold w-fit uppercase tracking-wider">
+              Current Need
+            </span>
+            <div>
+              <h2 className="text-4xl font-extrabold">{bloodLabel} Blood Needed</h2>
+              <p className="text-red-100 mt-1">Your donation will help save lives.</p>
+            </div>
+            
+            <div className="flex items-center gap-8 mt-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center bg-white/10">
+                   <HeartPulse className="w-4 h-4" />
+                </div>
+                <p className="text-xs text-red-100 leading-tight">Managed by<br/><span className="text-white font-bold">Blood Link</span></p>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ══ KPI CARDS ══ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          {
-            label: "Blood Type",   value: bloodLabel,           sub: "Your blood group",
-            Icon: Droplet,    grad: "from-red-600 to-red-800",      ic: "text-red-100",
-          },
-          {
-            label: "Appointments", value: appointmentCount,     sub: "Donation sessions",
-            Icon: Calendar,   grad: "from-slate-700 to-slate-900",  ic: "text-slate-200",
-          },
-          {
-            label: "Blood Drives", value: upcomingDrives.length, sub: "Upcoming near you",
-            Icon: HeartPulse, grad: "from-rose-600 to-rose-800",    ic: "text-rose-100",
-          },
-          {
-            label: "Notifications", value: unreadCount,          sub: unreadCount > 0 ? `${unreadCount} unread` : "All caught up",
-            Icon: Bell,       grad: "from-amber-500 to-orange-600", ic: "text-amber-100",
-          },
-        ].map(({ label, value, sub, Icon, grad, ic }) => (
-          <div key={label} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            {/* Gradient top bar */}
-            <div className={cn("h-16 w-full bg-gradient-to-br flex items-center justify-between px-4", grad)}>
-              <Icon className={cn("w-7 h-7 opacity-90", ic)} />
-              <p className={cn("text-3xl font-extrabold tabular-nums", ic)}>{value}</p>
-            </div>
-            <div className="px-3 py-2.5">
-              <p className="text-xs font-bold text-slate-800">{label}</p>
-              <p className="text-[10px] text-slate-400">{sub}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ══ IMPACT BANNER ══ */}
-      <div className="bg-red-600 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-white shadow-md shadow-red-900/20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <Heart className="w-5 h-5 text-white fill-white" />
-          </div>
-          <div>
-            <p className="text-sm font-extrabold">Every drop matters.</p>
-            <p className="text-[11px] text-red-200">There are {nearbyRequests.length} pending requests in your area right now.</p>
-          </div>
-        </div>
-        <Link href="/donor/requests">
-          <Button size="sm" className="bg-white text-red-600 hover:bg-red-50 font-bold gap-1.5 shrink-0 h-8 text-xs">
-            See Requests <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
-        </Link>
-      </div>
-
-      {/* ══ REQUESTS + DRIVES ══ */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
-
-        {/* Nearby requests — 3 cols */}
-        <div className="xl:col-span-3 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <Droplet className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-bold text-slate-900">Nearby Blood Requests</span>
-              {criticalCount > 0 && (
-                <span className="text-[10px] font-bold bg-red-100 text-red-600 border border-red-200 px-1.5 py-0.5 rounded-full">
-                  {criticalCount} critical
-                </span>
-              )}
-            </div>
-            <Link href="/donor/requests">
-              <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 text-xs gap-1 h-7 px-2 font-semibold">
-                View all <ArrowRight className="w-3 h-3" />
-              </Button>
-            </Link>
-          </div>
-
-          {nearbyRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <Droplet className="w-8 h-8 text-slate-200" />
-              <p className="text-sm text-slate-400 font-medium">No pending requests right now</p>
-              <p className="text-xs text-slate-300">Check back later — your community may need you.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-50">
-              {nearbyRequests.map((req) => (
-                <div key={req.id} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/60 transition-colors">
-                  {/* Blood badge */}
-                  <div className={cn(
-                    "w-11 h-9 rounded-lg flex items-center justify-center text-white font-extrabold text-sm shrink-0",
-                    BG_COLOR[req.bloodGroup] ?? "bg-slate-700"
-                  )}>
-                    {bloodGroupLabel(req.bloodGroup)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-slate-900">{req.hospital.hospitalName}</span>
-                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", URGENCY_STYLE[req.urgencyLevel])}>
-                        {req.urgencyLevel}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[11px] text-slate-400 flex items-center gap-0.5">
-                        <MapPin className="w-2.5 h-2.5" />{req.location}
-                      </span>
-                      <span className="text-[11px] text-slate-400">· {req.unitsRequired} units needed</span>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center bg-white/10">
+                   <Calendar className="w-4 h-4" />
                 </div>
-              ))}
+                <p className="text-xs text-red-100 leading-tight">For hospital<br/><span className="text-white font-bold">requests</span></p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center bg-white/10">
+                   <MapPin className="w-4 h-4" />
+                </div>
+                <p className="text-xs text-red-100 leading-tight">At collection<br/><span className="text-white font-bold">centers</span></p>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Blood drives — 2 cols */}
-        <div className="xl:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <HeartPulse className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-bold text-slate-900">Upcoming Blood Drives</span>
-            </div>
+          </div>
+          <div className="relative z-10 flex items-center gap-6 mt-4">
             <Link href="/donor/drives">
-              <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 text-xs h-7 px-2 font-semibold gap-1">
-                View all <ArrowRight className="w-3 h-3" />
+              <Button className="bg-white text-[#CC0000] hover:bg-slate-50 hover:text-red-700 rounded-full px-6 py-6 h-auto font-bold text-sm gap-2">
+                Donate Now <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
+            <Link href="#" className="text-sm font-medium hover:underline text-red-100">
+              Learn more
+            </Link>
           </div>
+        </div>
 
-          {upcomingDrives.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-2">
-              <Calendar className="w-8 h-8 text-slate-200" />
-              <p className="text-xs text-slate-400 font-medium text-center">No upcoming drives.<br />Check back soon!</p>
+        {/* Upcoming Drive (1 col) */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-900">Upcoming Drive</h3>
+            <Link href="/donor/drives" className="text-xs font-bold text-[#CC0000] hover:underline">
+              See all
+            </Link>
+          </div>
+          
+          {upcomingDrives.length > 0 ? (
+            <div className="flex flex-col h-full justify-between">
+              <div className="flex gap-4">
+                <div className="w-20 h-20 rounded-2xl bg-red-50 flex items-center justify-center shrink-0 border border-red-100 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-red-100/50" />
+                  <Heart className="w-10 h-10 text-red-500 fill-white relative z-10" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-sm font-bold text-slate-900 leading-tight">
+                    {upcomingDrives[0].title}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(upcomingDrives[0].date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Clock className="w-3.5 h-3.5" />
+                    {upcomingDrives[0].startTime} – {upcomingDrives[0].endTime}
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-slate-500">
+                    <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    <span className="line-clamp-2">{upcomingDrives[0].location}</span>
+                  </div>
+                </div>
+              </div>
+              <Link href="/donor/drives" className="mt-6 w-full">
+                <Button className="w-full bg-[#CC0000] hover:bg-red-700 text-white rounded-xl py-6 h-auto font-bold text-sm">
+                  Join Drive
+                </Button>
+              </Link>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
-              {upcomingDrives.map((drive) => (
-                <div key={drive.id} className="px-4 py-3 hover:bg-slate-50/60 transition-colors">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="text-xs font-bold text-slate-900 leading-tight">{drive.title}</p>
-                    <span className="text-[10px] font-bold bg-green-50 text-green-600 border border-green-200 px-1.5 py-0.5 rounded-full shrink-0">OPEN</span>
-                  </div>
-                  <div className="flex flex-col gap-1 text-[11px] text-slate-400 mb-2.5">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3 h-3 text-red-400" />
-                      {new Date(drive.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3 h-3 text-slate-400" />{drive.startTime} – {drive.endTime}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="w-3 h-3 text-red-400" />{drive.location}
-                    </span>
-                  </div>
-                  <Link href="/donor/drives">
-                    <button className="w-full h-7 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5">
-                      <CheckCircle className="w-3 h-3" /> Schedule Appointment
-                    </button>
-                  </Link>
-                </div>
-              ))}
+            <div className="flex flex-col items-center justify-center h-full text-center gap-3">
+              <Calendar className="w-10 h-10 text-slate-200" />
+              <p className="text-sm text-slate-500 font-medium">No upcoming drives</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ══ QUICK ACTIONS ══ */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "View Requests",    href: "/donor/requests",     Icon: Droplet,    style: "bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-900/20" },
-          { label: "Blood Drives",     href: "/donor/drives",       Icon: HeartPulse, style: "bg-slate-900 hover:bg-slate-800 text-white shadow-md" },
-          { label: "My Appointments",  href: "/donor/appointments", Icon: Calendar,   style: "bg-white hover:bg-red-50 border border-slate-200 text-slate-700 hover:border-red-200" },
-          { label: "My Profile",       href: "/donor/profile",      Icon: Heart,      style: "bg-white hover:bg-red-50 border border-slate-200 text-slate-700 hover:border-red-200" },
-        ].map(({ label, href, Icon, style }) => (
-          <Link key={label} href={href}>
-            <div className={cn("flex items-center gap-2.5 px-4 py-3 rounded-xl cursor-pointer transition-all", style)}>
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-bold leading-tight">{label}</span>
+      {/* ══ BOTTOM SECTION ══ */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Quick Actions */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+          <h3 className="font-bold text-slate-900 mb-6">Quick Actions</h3>
+          <div className="flex items-center justify-around">
+            <Link href="/donor/drives" className="flex flex-col items-center gap-3 group">
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                <Droplet className="w-6 h-6 text-red-500" />
+              </div>
+              <span className="text-xs font-bold text-slate-700 text-center">Find Drives</span>
+            </Link>
+            <Link href="/donor/appointments" className="flex flex-col items-center gap-3 group">
+              <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                <Calendar className="w-6 h-6 text-orange-500" />
+              </div>
+              <span className="text-xs font-bold text-slate-700 text-center">Book<br/>Appointment</span>
+            </Link>
+            <Link href="/donor/donations" className="flex flex-col items-center gap-3 group">
+              <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                <HeartPulse className="w-6 h-6 text-purple-500" />
+              </div>
+              <span className="text-xs font-bold text-slate-700 text-center">Donation<br/>History</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Donation Progress */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+          <h3 className="font-bold text-slate-900 mb-6">Donation Progress</h3>
+          <div className="flex items-center gap-6">
+            <div className="relative w-24 h-24 shrink-0">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="stroke-slate-100"
+                  fill="none"
+                  strokeWidth="3"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="stroke-[#CC0000]"
+                  fill="none"
+                  strokeWidth="3"
+                  strokeDasharray={`${progressPercent}, 100`}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xl font-bold text-slate-900">{progressPercent}%</span>
+              </div>
             </div>
-          </Link>
-        ))}
+            <div>
+              <p className="text-lg font-bold text-slate-900 leading-tight">You're doing<br/>great!</p>
+              <p className="text-xs text-slate-500 mt-2">Keep donating and making a difference.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Donation */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-900">Recent Donation</h3>
+            <Link href="/donor/donations" className="text-xs font-bold text-[#CC0000] hover:underline">
+              View all
+            </Link>
+          </div>
+          
+          {completedAppointments.length > 0 ? (
+            <div className="mt-auto bg-green-50/50 rounded-2xl p-4 border border-green-100 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center shrink-0 shadow-md shadow-green-600/20">
+                <Check className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-slate-900">{new Date(completedAppointments[0].appointmentDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                <p className="text-[11px] text-slate-500">Whole Blood Donation</p>
+              </div>
+              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold">
+                Completed
+              </span>
+            </div>
+          ) : (
+            <div className="mt-auto flex flex-col items-center justify-center py-6 text-slate-400">
+              <Droplet className="w-8 h-8 text-slate-200 mb-2" />
+              <p className="text-xs font-medium">No donations yet.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
