@@ -1,6 +1,6 @@
 # Blood Link System
 
-A real-time blood donation and emergency blood request management platform connecting hospitals, blood donors, and administrators.
+A real-time blood donation and emergency blood request management platform connecting hospitals, blood donors, and administrators..
 
 ## Tech Stack
 
