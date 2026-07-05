@@ -41,6 +41,24 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const getUserRole = async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const sessionRes = await fetch("/api/auth/session", { cache: "no-store" })
+      const session = await sessionRes.json()
+      const userRole = session?.user?.role
+
+      if (userRole === "admin" || userRole === "hospital" || userRole === "donor") {
+        return userRole
+      }
+
+      if (attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 150))
+      }
+    }
+
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -50,13 +68,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       if (result?.error) {
         setError("Invalid email or password. Please try again.")
       } else {
-        const sessionRes = await fetch("/api/auth/session")
-        const session = await sessionRes.json()
-        const userRole = session?.user?.role
+        const userRole = await getUserRole()
         
         if (userRole === "admin") router.push("/admin/dashboard")
         else if (userRole === "hospital") router.push("/hospital/dashboard")
-        else router.push("/donor/dashboard")
+        else if (userRole === "donor") router.push("/donor/dashboard")
+        else setError("Sign in succeeded, but we could not determine your account type. Please refresh and try again.")
         
         router.refresh()
       }
@@ -184,8 +201,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           {/* ── RIGHT: Blood Link branding (replaces image placeholder) ── */}
           <div className="relative hidden md:flex flex-col bg-slate-900 text-white p-8 overflow-hidden">
             {/* Background glows */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(220,38,38,0.3)_0%,_transparent_55%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(220,38,38,0.15)_0%,_transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(220,38,38,0.3)_0%,transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(220,38,38,0.15)_0%,transparent_55%)]" />
 
             {/* Top logo */}
             <div className="relative flex items-center gap-2.5">
@@ -207,7 +224,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                   className="object-cover object-center opacity-80"
                   unoptimized
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-slate-900/70 via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3">
                   <p className="text-xs font-semibold text-white/90 leading-snug">
                     Connecting donors &amp; hospitals across Uganda
