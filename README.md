@@ -1,6 +1,14 @@
-# Blood Link System
+# Web_Based Blood Donation System
 
 A real-time blood donation and emergency blood request management platform connecting hospitals, blood donors, and administrators..
+
+## Problem & Solution
+
+### Problem
+Access to safe blood during emergencies remains a major challenge due to poor coordination between blood donors, hospitals, and blood banks. Many hospitals struggle to quickly locate eligible donors, while willing donors often lack information about where and when their blood is needed. Traditional methods such as phone calls and social media are slow, unorganized, and inefficient, leading to delays that can cost lives.
+
+### Solution
+The Blood Link System is a real-time web-based blood donation coordination platform that connects blood donors, hospitals, and administrators in one centralized system. It enables hospitals to submit blood requests, allows eligible donors to receive and respond to donation requests, helps administrators manage users and blood requests, and provides dashboards for monitoring system activities. By streamlining communication and coordinating blood donation activities, the system reduces response time and improves access to lifesaving blood.
 
 ## Tech Stack
 
