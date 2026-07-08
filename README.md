@@ -21,40 +21,75 @@ The Blood Link System is a real-time web-based blood donation coordination platf
 
 ## Getting Started
 
-### 1. Configure Database
+### 1. Install dependencies
 
-Edit `.env` with your MySQL/MariaDB connection string:
+From the project root, run:
 
-```env
-DATABASE_URL="mysql://root:password@localhost:3306/blood_link_db"
-AUTH_SECRET="your-secret-key-at-least-32-characters"
-NEXTAUTH_URL="http://localhost:3000"
+```bash
+npm install
 ```
 
-### 2. Push Database Schema
+### 2. Configure your environment
+
+Create a `.env.local` file in the project root and add your values.
+
+Important: this project is wired for PostgreSQL in Prisma, so use a PostgreSQL connection string, not MySQL.
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/blood_link_db"
+AUTH_SECRET="your-secret-key-at-least-32-characters"
+NEXTAUTH_URL="http://localhost:3000"
+
+NEXT_PUBLIC_SUPABASE_URL=""
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=""
+```
+
+If you need a secret, generate one with:
+
+```bash
+openssl rand -base64 32
+```
+
+### 3. Push the database schema
+
+This creates the tables in your database:
 
 ```bash
 npm run db:push
 ```
 
-### 3. Seed the Database
+### 4. Seed the database
+
+Load the sample admin, hospital, and donor accounts:
 
 ```bash
 npm run db:seed
 ```
 
-This creates:
-- **Admin:** `admin@bloodlink.com` / `admin123`
-- **Hospital:** `nairobi@bloodlink.com` / `hospital123`
-- **Donor:** `james@bloodlink.com` / `donor123`
+Seeded accounts:
 
-### 4. Start Development Server
+- Admin: `admin@bloodlink.com` / `admin123`
+- Hospital: `nairobi@bloodlink.com` / `hospital123`
+- Donor: `james@bloodlink.com` / `donor123`
+
+### 5. Start the app
+
+Run the development server:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Then open [http://localhost:3000](http://localhost:3000).
+
+### 6. Optional production check
+
+If you want to verify a production build locally:
+
+```bash
+npm run build
+npm start
+```
 
 ## Pages
 
